@@ -1,0 +1,94 @@
+# TODO: validar que el audio es monofónico?
+
+import logging
+from pathlib import Path
+import soundfile as sf
+import librosa
+import numpy as np
+from .excepciones_entrada import (
+    AudioNotFoundError,
+    AudioFormatError,
+    AudioDurationError,
+    AudioSilentError,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def _validar_archivo_existe(ruta: Path):
+    if not ruta.is_file():
+        raise AudioNotFoundError(f"Archivo no válido o no existe: {ruta}")
+
+
+# HEADER, sin necesidad de cargar el audio completo
+def _get_audio_info(ruta: Path) -> sf._SoundFileInfo:
+    try:
+        return sf.info(ruta)
+    except (
+        RuntimeError
+    ) as e:  # Format not recognized de libsndfile. Ej. txt renombrado a wav
+        raise AudioFormatError(f"Formato incorrecto o corrupto: {e} - {ruta}") from e
+    except (
+        Exception
+    ) as e:  # Genérica. Formato no soportado por soundfile. Ej. .aac, .ogg sin backend
+        raise AudioFormatError(f"Audio no soportado: {e} - {ruta}") from e
+
+
+def _validar_duración(info: sf._SoundFileInfo, max_seg: float, min_seg: float):
+    if info.duration > max_seg:
+        raise AudioDurationError(
+            f"Duración {info.duration:.1f}s > máximo {max_seg}s - {info.name}"
+        )
+    if info.duration < min_seg:
+        raise AudioDurationError(
+            f"Duración {info.duration:.2f}s < mínimo {min_seg}s - {info.name}"
+        )
+
+
+def _cargar_contenido(ruta: Path, sr: int) -> tuple[np.ndarray, int]:
+    try:
+        audio, sr = librosa.load(ruta, sr=sr, mono=True)
+        return audio, sr
+    except Exception as e:
+        raise AudioFormatError(f"Error decodificando audio: {e} - {ruta}") from e
+
+
+def _validar_no_silencio(y: np.ndarray, umbral: float):
+    rms = librosa.feature.rms(y=y).mean()
+    if rms < umbral:
+        raise AudioSilentError(f"Audio silencioso: RMS={rms:.5f} < {umbral}")
+
+
+def validar_entrada(
+    ruta: Path,
+    max_duración: float = 120,
+    min_duración: float = 0.5,
+    sr_objetivo: int = 22050,
+    rms_umbral: float = 0.01,
+) -> tuple[np.ndarray, int]:
+    """
+    Verifica la existencia del archivo, valida que contenga audio válido (sample rate esperado para AMT con basic pitch 22050Hz y si no resamplea),
+    y rechaza pistas vacías o que superen los 2 minutos de duración (parámetro por defecto).
+    """
+
+    logger.debug("[ETAPA 1] Validando header: %s", ruta)
+
+    _validar_archivo_existe(ruta)
+    info = _get_audio_info(ruta)
+    _validar_duración(info, max_seg=max_duración, min_seg=min_duración)
+
+    logger.debug(
+        "[ETAPA 1] Header OK: %.1fs, %dHz -> %dHz, %dch - %s",
+        info.duration,
+        info.samplerate,
+        sr_objetivo,
+        info.channels,
+        ruta,
+    )
+
+    logger.debug("[ETAPA 1] Validando contenido: %s", info.name)
+    audio, sr = _cargar_contenido(ruta, sr_objetivo)
+    _validar_no_silencio(audio, umbral=rms_umbral)
+
+    logger.debug("[ETAPA 1] Contenido OK: %.1fs", info.duration)
+    return audio, sr
