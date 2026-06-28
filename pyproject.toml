@@ -3,10 +3,24 @@ name = "vocal-amt-corrector"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10, <3.11"
 dependencies = [
-    "basic-pitch>=0.4.0",
+    "basic-pitch==0.4.0",
+    "numpy==1.26.4",
+    "numba==0.60.0",
+    "llvmlite==0.43.0",
+    "onnxruntime==1.18.1",
+    "setuptools==70.3.0",
 ]
+
+
+[tool.uv]
+exclude-dependencies = ["coremltools"]
+
+# Entorno validado en:
+# - macOS 11 Big Sur (Intel)
+# - Python 3.10.20
+# - uv
 
 [dependency-groups]
 dev = [

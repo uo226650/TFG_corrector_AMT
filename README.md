@@ -12,8 +12,8 @@ Este proyecto usa [uv] para dependencias
 Requiere Python 3.9
 
 ```
-git clone repo
-cd repo
+git clone https://github.com/uo226650/TFG_corrector_AMT.git
+cd vocal_amt_corrector
 uv sync
 ```
 ## Uso
