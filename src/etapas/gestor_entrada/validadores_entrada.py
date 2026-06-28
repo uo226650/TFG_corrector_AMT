@@ -67,8 +67,17 @@ def validar_entrada(
     rms_umbral: float = 0.01,
 ) -> tuple[np.ndarray, int]:
     """
-    Verifica la existencia del archivo, valida que contenga audio válido (sample rate esperado para AMT con basic pitch 22050Hz y si no resamplea),
-    y rechaza pistas vacías o que superen los 2 minutos de duración (parámetro por defecto).
+    Valida el archivo de entrada
+
+    Verifica la existencia del archivo, comprueba que contenga audio válido
+    y rechaza pistas vacías o que superen los 2 minutos de duración (valor por defecto, parametrizable).
+
+    Args:
+        ruta: Ruta al archivo de audio.
+        max_duración: Límite de la duración máxima del audio admitida para el procesamiento
+        min_duración: Valor mínimo para validar que no se trata de un audio vacío
+        sr_objetivo: Sample rate esperado. Para AMT con BasicPitch es 22050Hz. En caso de ser otro resamplea (Input audio maybe be of any sample rate, however, all audio will be resampled to 22050 Hz before processing.)
+        rms_umbral: Root Mean Square es el volumen/energía promedio del audio. Rango[0-1]: 0.0 = silencio total, 1.0 = audio al máximo
     """
 
     logger.debug("[ETAPA 1] Validando header: %s", ruta)

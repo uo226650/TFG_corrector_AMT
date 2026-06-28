@@ -9,7 +9,7 @@ Evaluación y corrección automática de transcripciones melódicas de canto mon
 ## Instalación
 Este proyecto usa [uv] para dependencias
 
-Requiere Python 3.9
+Requiere Python 3.10
 
 ```
 git clone https://github.com/uo226650/TFG_corrector_AMT.git
