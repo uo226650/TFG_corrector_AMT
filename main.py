@@ -32,7 +32,7 @@ def flujo_completo(ruta_audio: Path):
     audio, sr = cargar_audio(Path(ruta_audio))
 
     # Etapa 2: Transcripción del audio con herramienta externa
-    t_inicial = transcribir_audio()
+    t_inicial = transcribir_audio(Path(ruta_audio))
 
     # Etapa 3: Conversión a formato interno
     t_normalizada = convertir_formato()
