@@ -4,7 +4,11 @@ from pathlib import Path
 
 from logger_config import setup_logging
 from src.etapas.gestor_entrada.gestor_entrada import cargar_audio
-from src.etapas.adaptador_AMT import transcribir_audio
+from src.etapas.adaptador_AMT import (
+    transcribir_audio,
+    DEFAULT_AMT_ADAPTER,
+    REGISTRO_ADAPTADORES,
+)
 from src.etapas.conversor_simbólico import convertir_formato
 from src.etapas.corrector import corregir_transcripción
 from src.etapas.evaluador import evaluar_transcripciones
@@ -32,7 +36,7 @@ def flujo_completo(ruta_audio: Path):
     audio, sr = cargar_audio(Path(ruta_audio))
 
     # Etapa 2: Transcripción del audio con herramienta externa
-    t_inicial = transcribir_audio(Path(ruta_audio))
+    t_inicial = transcribir_audio(Path(ruta_audio), args.amt)
 
     # Etapa 3: Conversión a formato interno
     t_normalizada = convertir_formato()
@@ -65,7 +69,13 @@ def _make_parser() -> argparse.ArgumentParser:
     # Args
     parser.add_argument("audio", type=Path, nargs="?", help="Archivo de audio")
     parser.add_argument(
-        "csv", type=Path, nargs="?", help="CSV de referencia o a evaluar"
+        "--amt",
+        default=DEFAULT_AMT_ADAPTER,
+        choices=REGISTRO_ADAPTADORES.keys(),
+        help="Selección del motor AMT",
+    )
+    parser.add_argument(
+        "--csv", type=Path, nargs="?", help="CSV de referencia o a evaluar"
     )
 
     return parser

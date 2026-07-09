@@ -13,3 +13,8 @@ wheels/
 /data
 /logs
 /tests
+/results
+/docs
+
+# Archivos de dev
+notas.md

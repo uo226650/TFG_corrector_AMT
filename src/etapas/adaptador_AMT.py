@@ -5,31 +5,126 @@ Solicita y proporciona la transcripción inicial de un audio vocal monofónico.
 """
 
 import os
+import sys
 import logging
 
 from pathlib import Path
+from typing import Protocol
 from logger_config import capturar_prints
 from basic_pitch.inference import predict_and_save
 from basic_pitch import ICASSP_2022_MODEL_PATH
+from src.dominio.transcripción import Transcripción
+
+DEFAULT_AMT_ADAPTER = "basicpitch"
 
 # Crea logger para el adaptador AMT externo
 logger = logging.getLogger(__name__)
 
 
-def transcribir_audio(ruta: Path):
-    logger.info("Transcribiendo con AMT externa")
+# Strategy Interface
+class AdaptadorAMT(Protocol):
+    nombre: str
+
+    # Strategy
+    def transcribir(self, ruta_audio: Path, ruta_salida: Path) -> Transcripción: ...
+    # Adapter
+    def csv_a_ts(self, ruta_csv: Path) -> Transcripción: ...
+
+
+class AdaptadorBasicPitch:
+    nombre = "basicpitch"
+
+    def transcribir(self, ruta_audio: Path, ruta_salida: Path) -> Transcripción:
+        try:
+            with capturar_prints(logger, f"[{self.nombre}]"):
+                predict_and_save(
+                    audio_path_list=[ruta_audio],
+                    output_directory=ruta_salida,
+                    save_midi=False,
+                    sonify_midi=False,
+                    save_model_outputs=False,  # Para guardar el .npz
+                    save_notes=True,  # Para guardar el .csv
+                    model_or_model_path=ICASSP_2022_MODEL_PATH,
+                )
+        except Exception as e:
+            logger.error("[ADAPTADOR_AMT] %s ha lanzado: %s", self.nombre, e)
+
+        # Carga la ruta del csv generado
+        stem = ruta_audio.stem
+        ruta_csv = ruta_salida / f"{stem}_basic_pitch.csv"
+
+        # Verifica que existe
+        if not ruta_csv.exists():
+            raise FileNotFoundError(
+                f"Basic Pitch no generó el csv: {ruta_csv}"
+            )  # para test usar predict_save con save_notes=False
+
+        # Transforma el csv a Transcripción
+        ts_inicial = self.csv_a_ts(ruta_csv)
+        return ts_inicial
+
+    def csv_a_ts(self, ruta_csv: Path) -> Transcripción:
+        # TODO: Lógica
+        return Transcripción()
+
+
+# class AdaptadorOtroAMT:
+#     nombre = "otroAMT"
+
+#     def transcribir(self, ruta_audio: Path, ruta_salida: Path) -> Transcripción:
+#         { lógica del nuevo AMT }
+
+
+REGISTRO_ADAPTADORES = {
+    "basicpitch": AdaptadorBasicPitch()
+    # "nuevoAMT": AdaptadorOtroAMT(),
+}
+
+
+class AdaptadorNoEncontradoError(Exception):
+    """Se lanza cuando el nombre del adaptador no está registrado"""
+
+    pass
+
+
+def _obtener_adaptador_amt(nombre: str) -> AdaptadorAMT:  # Factory
+    """
+    Raises:
+        AdaptadorNoEncontradoError: Si el nombre no está registrado
+    """
+    try:
+        adaptador = REGISTRO_ADAPTADORES[nombre.lower()]
+    except KeyError:
+        adaptadores_validos = ",".join(REGISTRO_ADAPTADORES.keys())
+        raise AdaptadorNoEncontradoError(
+            f"[ADAPTADOR_AMT] Adaptador '{nombre}' no encontrado. Válidos: {adaptadores_validos}"
+        )
+
+    return adaptador
+
+
+def transcribir_audio(ruta_archivo: Path, adaptador: str):
+    logger.info("[ADAPTADOR_AMT] Transcribiendo con AMT externa")
+
+    try:
+        adaptador_amt = _obtener_adaptador_amt(adaptador)
+    except AdaptadorNoEncontradoError as e:
+        logger.critical(e)
+        adaptador_amt = REGISTRO_ADAPTADORES[DEFAULT_AMT_ADAPTER]  # default
+        logger.info(
+            "[ADAPTADOR_AMT] Ejecutando adaptador por defecto: %s",
+            adaptador_amt.nombre,
+        )
 
     # Directorio para guardar la salida
-    ts_dirname = "ts_originales"
-    os.makedirs(f"data/{ts_dirname}", exist_ok=True)
+    ts_dirname = f"data/ts_inicial/{adaptador_amt.nombre}"
+    os.makedirs(ts_dirname, exist_ok=True)
 
-    with capturar_prints(logger, "[basic-pitch]"):
-        predict_and_save(
-            audio_path_list=[ruta],
-            output_directory=f"data/{ts_dirname}/",
-            save_midi=False,
-            sonify_midi=False,
-            save_model_outputs=True,
-            save_notes=True,
-            model_or_model_path=ICASSP_2022_MODEL_PATH,
-        )
+    try:
+        adaptador_amt.transcribir(
+            ruta_archivo, Path(ts_dirname)
+        )  # Método. No detecta estáticamente la falta de argumentos
+    except FileNotFoundError as e:
+        logger.critical("[ADAPTADOR_AMT] %s.", e)
+        logger.critical("Detenido el proceso de transcripción")
+        sys.exit(1)

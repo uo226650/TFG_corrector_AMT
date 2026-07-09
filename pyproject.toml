@@ -11,6 +11,7 @@ dependencies = [
     "llvmlite==0.43.0",
     "onnxruntime==1.18.1",
     "setuptools==70.3.0",
+    "pandas>=2.3.3",
 ]
 
 

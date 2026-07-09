@@ -18,7 +18,7 @@ uv sync
 ```
 ## Uso
 
-#### Command Line Tool
+### Command Line Tool
 
 Interfaz por línea de comandos. Para transcribir, corregir y evaluar una transcripción de un audio `<ruta-archivo-audio>` :
 
@@ -28,8 +28,20 @@ uv run python main.py  <ruta-archivo-audio>
 
 Ejemplo: 
 ```
-uv run python main.py audios/melodía.mp3
+uv run python main.py data/audio/melodía.mp3
 ```
+
+#### Herramienta AMT
+Opcionalmente se puede escoger el motor AMT a utilizar
+-  `--amt` para especificar qué herramienta externa AMT utilizar de las soportadas (herramienta por defecto si no se incluye el argumento).
+
+Ejemplo: 
+```
+uv run python main.py data/audio/melodía.mp3 --amt madmom
+```
+
+#### Etapas a ejecutar
+
 Opcionalmente se podrán incluir las siguientes flags para ejecutar etapas específicas de la pipeline por separado:
 
 - [future release] `--transcribir` para ejecutar únicamente la transcripción de un audio.
@@ -39,5 +51,5 @@ Opcionalmente se podrán incluir las siguientes flags para ejecutar etapas espec
 Para más ayuda:
 
 ```bash
-main.py --help
+uv run python main.py --help
 ```
