@@ -1,8 +1,10 @@
 import argparse
 import logging
 from pathlib import Path
+import sys
 
 from logger_config import setup_logging
+from src.etapas.gestor_entrada.excepciones_entrada import AudioValidationError
 from src.etapas.gestor_entrada.gestor_entrada import cargar_audio
 from src.etapas.adaptador_AMT import (
     transcribir_audio,
@@ -25,24 +27,28 @@ def main(args: argparse.Namespace):
     ruta_audio = args.audio
 
     # TODO: control manual del comando que viene (si no viene ninguno se ejecuta la pipeline entera)
-    flujo_completo(ruta_audio)
+    flujo_completo(ruta_audio, args.amt)
 
 
-def flujo_completo(ruta_audio: Path):
+def flujo_completo(ruta_audio: Path, adaptador_amt: str):
 
-    logger.info("Iniciando canalización para el archivo %s", ruta_audio)
+    logger.info("[PIPELINE] Iniciando canalización para el archivo %s", ruta_audio)
 
     # Etapa 1: Carga y validación del archivo de audio
-    audio, sr = cargar_audio(Path(ruta_audio))
+    try:
+        audio, sr = cargar_audio(Path(ruta_audio))
+    except AudioValidationError as e:
+        logger.critical("[PIPELINE] %s", e)
+        sys.exit(1)  # Salida controlada, no se puede continuar con la canalización
 
     # Etapa 2: Transcripción del audio con herramienta externa
-    t_inicial = transcribir_audio(Path(ruta_audio), args.amt)
+    ts_inicial = transcribir_audio(Path(ruta_audio), adaptador_amt)
 
     # Etapa 3: Conversión a formato interno
-    t_normalizada = convertir_formato()
+    ts_normalizada = convertir_formato()
 
     # Etapa 4: Corrección de la transcripción inicial
-    t_corregida = corregir_transcripción()
+    ts_corregida = corregir_transcripción()
 
     # Etapa 5: Generación de métricas
     evaluar_transcripciones()
@@ -50,7 +56,7 @@ def flujo_completo(ruta_audio: Path):
     # Etapa 6: Generación de informes
     generar_informe()
 
-    logger.info("Canalización completada sin paradas")
+    logger.info("[PIPELINE] Canalización completada sin paradas")
 
 
 def _make_parser() -> argparse.ArgumentParser:
