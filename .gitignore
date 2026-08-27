@@ -15,6 +15,7 @@ wheels/
 /tests
 /results
 /docs
+/out
 
 # Archivos de dev
 notas.md

@@ -7,13 +7,15 @@ Solicita y proporciona la transcripción inicial de un audio vocal monofónico.
 import os
 import sys
 import logging
+import csv
 
 from pathlib import Path
 from typing import Protocol
+
 from logger_config import capturar_prints
 from basic_pitch.inference import predict_and_save
 from basic_pitch import ICASSP_2022_MODEL_PATH
-from src.dominio.transcripción import Transcripción
+from src.dominio.transcripción import Transcripción, Nota
 
 DEFAULT_AMT_ADAPTER = "basicpitch"
 
@@ -32,15 +34,15 @@ class AdaptadorAMT(Protocol):
 
 
 class AdaptadorBasicPitch:
-    nombre = "basicpitch"
+    nombre = "basic_pitch"
 
-    def transcribir(self, ruta_audio: Path, ruta_salida: Path) -> Transcripción:
+    def transcribir(self, ruta_audio: Path, ruta_salida: Path) -> Path:
         try:
             with capturar_prints(logger, f"[{self.nombre}]"):
                 predict_and_save(
                     audio_path_list=[ruta_audio],
                     output_directory=ruta_salida,
-                    save_midi=False,
+                    save_midi=False,  # Cambiar a True (Requisito sistema: RTranscripciónInicial)
                     sonify_midi=False,
                     save_model_outputs=False,  # Para guardar el .npz
                     save_notes=True,  # Para guardar el .csv
@@ -51,7 +53,7 @@ class AdaptadorBasicPitch:
 
         # Carga la ruta del csv generado
         stem = ruta_audio.stem
-        ruta_csv = ruta_salida / f"{stem}_basic_pitch.csv"
+        ruta_csv = ruta_salida / f"{stem}_{self.nombre}.csv"
 
         # Verifica que existe
         if not ruta_csv.exists():
@@ -59,13 +61,28 @@ class AdaptadorBasicPitch:
                 f"Basic Pitch no generó el csv: {ruta_csv}"
             )  # para test usar predict_save con save_notes=False
 
-        # Transforma el csv a Transcripción
-        ts_inicial = self.csv_a_ts(ruta_csv)
-        return ts_inicial
+        return ruta_csv
 
     def csv_a_ts(self, ruta_csv: Path) -> Transcripción:
-        # TODO: Lógica
-        return Transcripción()
+
+        with open(ruta_csv, newline="", encoding="utf-8") as ts_inicial:
+            notas = []
+            reader = csv.reader(ts_inicial)
+            next(reader)
+            for row in reader:
+                start_time = float(row[0])
+                end_time = float(row[1])
+                pitch_midi = int(row[2])
+                notas.append(
+                    Nota(
+                        pitch=pitch_midi,
+                        onset=start_time,
+                        offset=end_time,
+                        duración=end_time - start_time,
+                        fuente=self.nombre,
+                    )
+                )
+        return Transcripción(eventos=notas)
 
 
 # class AdaptadorOtroAMT:
@@ -104,6 +121,20 @@ def _obtener_adaptador_amt(nombre: str) -> AdaptadorAMT:  # Factory
 
 
 def transcribir_audio(ruta_archivo: Path, adaptador: str):
+    """
+    Transcribe el archivo de entrada:
+
+        - Verifica la existencia del adaptador AMT. En caso de no encontrar el adaptador solicitado utiliza el adaptador por defecto.
+        - Solicita la transcripción automática
+
+    Args:
+        ruta: Ruta al archivo de audio.
+        adaptador: Nombre de la herramienta AMT a utilizar
+
+    Returns:
+        ts_inicial: Transcripción automática inicial cruda
+        adaptador_amt: Nombre de la herramienta AMT que ha proporcionado esa transcripción ts_incial
+    """
     logger.info("[ADAPTADOR_AMT] Transcribiendo con AMT externa")
 
     try:
@@ -121,9 +152,10 @@ def transcribir_audio(ruta_archivo: Path, adaptador: str):
     os.makedirs(ts_dirname, exist_ok=True)
 
     try:
-        adaptador_amt.transcribir(
+        ts_inicial_ruta = adaptador_amt.transcribir(
             ruta_archivo, Path(ts_dirname)
         )  # Método. No detecta estáticamente la falta de argumentos
+        return ts_inicial_ruta, adaptador_amt
     except FileNotFoundError as e:
         logger.critical("[ADAPTADOR_AMT] %s.", e)
         logger.critical("Detenido el proceso de transcripción")

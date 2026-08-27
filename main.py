@@ -30,7 +30,7 @@ def main(args: argparse.Namespace):
     flujo_completo(ruta_audio, args.amt)
 
 
-def flujo_completo(ruta_audio: Path, adaptador_amt: str):
+def flujo_completo(ruta_audio: Path, adaptador_amt_nombre: str):
 
     logger.info("[PIPELINE] Iniciando canalización para el archivo %s", ruta_audio)
 
@@ -42,10 +42,12 @@ def flujo_completo(ruta_audio: Path, adaptador_amt: str):
         sys.exit(1)  # Salida controlada, no se puede continuar con la canalización
 
     # Etapa 2: Transcripción del audio con herramienta externa
-    ts_inicial = transcribir_audio(Path(ruta_audio), adaptador_amt)
+    ts_inicial_ruta, adaptador_ts = transcribir_audio(
+        Path(ruta_audio), adaptador_amt_nombre
+    )
 
     # Etapa 3: Conversión a formato interno
-    ts_normalizada = convertir_formato()
+    ts_normalizada = convertir_formato(ts_inicial_ruta, adaptador_ts)
 
     # Etapa 4: Corrección de la transcripción inicial
     ts_corregida = corregir_transcripción()
