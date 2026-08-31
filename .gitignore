@@ -12,10 +12,10 @@ wheels/
 
 /data
 /logs
-/tests
 /results
 /docs
 /out
+/tests/data
 
 # Archivos de dev
 notas.md

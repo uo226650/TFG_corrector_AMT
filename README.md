@@ -53,3 +53,15 @@ Para más ayuda:
 ```bash
 uv run python main.py --help
 ```
+
+#### Pruebas
+
+```
+uv run pytest <ruta-tests>
+```
+
+Ejemplo:
+
+```bash
+uv run pytest tests/test_gestor_entrada.py
+```
