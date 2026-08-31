@@ -14,56 +14,23 @@ from .excepciones_entrada import (
 
 logger = logging.getLogger(__name__)
 
-
-def _validar_archivo_existe(ruta: Path):
-    if not ruta.is_file():
-        raise AudioNotFoundError(f"Archivo no válido o no existe: {ruta}")
-
-
-# HEADER, sin necesidad de cargar el audio completo
-def _get_audio_info(ruta: Path) -> sf._SoundFileInfo:
-    try:
-        return sf.info(ruta)
-    except (
-        RuntimeError
-    ) as e:  # Format not recognized de libsndfile. Ej. txt renombrado a wav
-        raise AudioFormatError(f"Formato incorrecto o corrupto: {e} - {ruta}") from e
-    except (
-        Exception
-    ) as e:  # Genérica. Formato no soportado por soundfile. Ej. .aac, .ogg sin backend
-        raise AudioFormatError(f"Audio no soportado: {e} - {ruta}") from e
-
-
-def _validar_duración(info: sf._SoundFileInfo, max_seg: float, min_seg: float):
-    if info.duration > max_seg:
-        raise AudioDurationError(
-            f"Duración {info.duration:.1f}s > máximo {max_seg}s - {info.name}"
-        )
-    if info.duration < min_seg:
-        raise AudioDurationError(
-            f"Duración {info.duration:.2f}s < mínimo {min_seg}s - {info.name}"
-        )
-
-
-def _cargar_contenido(ruta: Path, sr: int) -> tuple[np.ndarray, int]:
-    try:
-        audio, sr = librosa.load(ruta, sr=sr, mono=True)
-        return audio, sr
-    except Exception as e:
-        raise AudioFormatError(f"Error decodificando audio: {e} - {ruta}") from e
-
-
-def _validar_no_silencio(y: np.ndarray, umbral: float):
-    rms = librosa.feature.rms(y=y).mean()
-    if rms < umbral:
-        raise AudioSilentError(f"Audio silencioso: RMS={rms:.5f} < {umbral}")
+FORMATOS_SOPORTADOS = {
+    "WAV",
+    "FLAC",
+    "MP3",
+    "OGG",
+    "M4A",
+}  # Requisito funcional -> 1.1.1.1. RCargarAudio
+SR = 22050
+MIN_DURACION = 0.5  # segundos
+MAX_DURACION = 120  # segundos
 
 
 def validar_entrada(
     ruta: Path,
-    max_duración: float = 120,
-    min_duración: float = 0.5,
-    sr_objetivo: int = 22050,
+    max_duración: float = MAX_DURACION,
+    min_duración: float = MIN_DURACION,
+    sr_objetivo: int = SR,
     rms_umbral: float = 0.01,
 ) -> tuple[np.ndarray, int]:
     """
@@ -101,3 +68,48 @@ def validar_entrada(
 
     logger.debug("[ETAPA 1] Contenido OK: %.1fs", info.duration)
     return audio, sr
+
+
+def _validar_archivo_existe(ruta: Path):
+    if not ruta.is_file():
+        raise AudioNotFoundError(f"Archivo no válido o no existe: {ruta}")
+
+
+# HEADER, sin necesidad de cargar el audio completo
+def _get_audio_info(ruta: Path) -> sf._SoundFileInfo:
+    try:
+        info = sf.info(ruta)
+    except (
+        RuntimeError
+    ) as e:  # Formato no reconocido por libsndfile. Ej. txt renombrado a wav
+        raise AudioFormatError(f"Formato incorrecto o corrupto: {e} - {ruta}") from e
+
+    if info.format not in FORMATOS_SOPORTADOS:
+        # Formato soportado por libsndfile pero no por mi sistema, Ej. audio.aiff
+        raise AudioFormatError(f"Formato de audio {info.format} no soportado")
+    return info
+
+
+def _validar_duración(info: sf._SoundFileInfo, max_seg: float, min_seg: float):
+    if info.duration > max_seg:
+        raise AudioDurationError(
+            f"Duración {info.duration:.1f}s > máximo {max_seg}s - {info.name}"
+        )
+    if info.duration < min_seg:
+        raise AudioDurationError(
+            f"Duración {info.duration:.2f}s < mínimo {min_seg}s - {info.name}"
+        )
+
+
+def _cargar_contenido(ruta: Path, sr: int) -> tuple[np.ndarray, int]:
+    try:
+        audio, sr = librosa.load(ruta, sr=sr, mono=True)
+        return audio, sr
+    except Exception as e:
+        raise AudioFormatError(f"Error decodificando audio: {e} - {ruta}") from e
+
+
+def _validar_no_silencio(y: np.ndarray, umbral: float):
+    rms = librosa.feature.rms(y=y).mean()
+    if rms < umbral:
+        raise AudioSilentError(f"Audio silencioso: RMS={rms:.5f} < {umbral}")
