@@ -8,7 +8,7 @@ from src.etapas.gestor_entrada.excepciones_entrada import AudioValidationError
 from src.etapas.gestor_entrada.gestor_entrada import cargar_audio
 from src.etapas.adaptador_AMT import (
     transcribir_audio,
-    DEFAULT_AMT_ADAPTER,
+    DEFAULT_ADAPTADOR_AMT,
     REGISTRO_ADAPTADORES,
 )
 from src.etapas.conversor_simbólico import convertir_formato
@@ -78,7 +78,7 @@ def _make_parser() -> argparse.ArgumentParser:
     parser.add_argument("audio", type=Path, nargs="?", help="Archivo de audio")
     parser.add_argument(
         "--amt",
-        default=DEFAULT_AMT_ADAPTER,
+        default=DEFAULT_ADAPTADOR_AMT,
         choices=REGISTRO_ADAPTADORES.keys(),
         help="Selección del motor AMT",
     )

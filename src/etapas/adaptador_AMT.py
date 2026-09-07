@@ -15,9 +15,10 @@ from typing import Protocol
 from logger_config import capturar_prints
 from basic_pitch.inference import predict_and_save
 from basic_pitch import ICASSP_2022_MODEL_PATH
-from src.dominio.transcripción import Transcripción, Nota
+from src.dominio.nota import Nota
+from src.dominio.transcripción import Transcripción
 
-DEFAULT_AMT_ADAPTER = "basicpitch"
+DEFAULT_ADAPTADOR_AMT = "basicpitch"
 
 # Crea logger para el adaptador AMT externo
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class AdaptadorBasicPitch:
                     model_or_model_path=ICASSP_2022_MODEL_PATH,
                 )
         except Exception as e:
-            logger.error("[ADAPTADOR_AMT] %s ha lanzado: %s", self.nombre, e)
+            logger.warning("[ADAPTADOR_AMT] %s ha lanzado: %s", self.nombre, e)
 
         # Carga la ruta del csv generado
         stem = ruta_audio.stem
@@ -67,21 +68,29 @@ class AdaptadorBasicPitch:
 
         with open(ruta_csv, newline="", encoding="utf-8") as ts_inicial:
             notas = []
-            reader = csv.reader(ts_inicial)
+            reader = csv.DictReader(ts_inicial)
             next(reader)
-            for row in reader:
-                start_time = float(row[0])
-                end_time = float(row[1])
-                pitch_midi = int(row[2])
-                notas.append(
-                    Nota(
-                        pitch=pitch_midi,
-                        onset=start_time,
-                        offset=end_time,
-                        duración=end_time - start_time,
-                        fuente=self.nombre,
+            for num, row in enumerate(reader, start=2):
+                try:
+                    start_time = float(row["start_time_s"])
+                    end_time = float(row["end_time_s"])
+                    pitch_midi = int(row["pitch_midi"])
+
+                    notas.append(
+                        Nota(
+                            pitch=pitch_midi,
+                            onset=start_time,
+                            offset=end_time,
+                            fuente=self.nombre,
+                        )
                     )
-                )
+                except ValueError as e:
+                    logger.warning(
+                        "[CONVERSOR] \nDescartada Fila[%d] raw=%s \nMotivo: %s",
+                        num,
+                        row,
+                        e,
+                    )
         return Transcripción(eventos=notas)
 
 
@@ -141,7 +150,7 @@ def transcribir_audio(ruta_archivo: Path, adaptador: str):
         adaptador_amt = _obtener_adaptador_amt(adaptador)
     except AdaptadorNoEncontradoError as e:
         logger.critical(e)
-        adaptador_amt = REGISTRO_ADAPTADORES[DEFAULT_AMT_ADAPTER]  # default
+        adaptador_amt = REGISTRO_ADAPTADORES[DEFAULT_ADAPTADOR_AMT]  # default
         logger.info(
             "[ADAPTADOR_AMT] Ejecutando adaptador por defecto: %s",
             adaptador_amt.nombre,
