@@ -25,7 +25,9 @@ class TestCargarAudio:
         2  # Número de entradas en el log cuando la etapa ha finalizado con éxito
     )
 
-    def test_audio_formatos_admitidos(self, audio_formatos_soportados):
+    def test_audio_formatos_admitidos_retorna_instancia(
+        self, audio_formatos_soportados
+    ):
         """TODO: identificador del caso de prueba:
         Audio válido devuelve info y registra dos entradas de log."""
 
@@ -33,7 +35,7 @@ class TestCargarAudio:
         assert isinstance(audio, np.ndarray)
         self._assert_log(self.VALIDO_LOG_COUNT)
 
-    def test_audio_formato_m4a_renombrado(self, audio_m4a_renombrado):
+    def test_audio_formato_m4a_renombrado_retorna_instancia(self, audio_m4a_renombrado):
         """TODO: identificador del caso de prueba:
         Audio válido en formato m4a devuelve info y registra dos entradas de log."""
 
@@ -41,7 +43,7 @@ class TestCargarAudio:
         assert isinstance(audio, np.ndarray)
         self._assert_log(self.VALIDO_LOG_COUNT)
 
-    def test_audio_inexistente(self):
+    def test_audio_inexistente_lanza_AudioNotFoundError(self):
         """TODO: identificador del caso de prueba:
         Archivo no encontrado lanza excepción y registra una entrada de log."""
 
@@ -49,36 +51,38 @@ class TestCargarAudio:
 
         self._assert_carga_falla_y_log(AudioNotFoundError, ruta)
 
-    def test_archivo_no_audio(self, archivo_no_audio):
+    def test_archivo_no_audio_lanza_AudioFormatError(self, archivo_no_audio):
         """TODO: identificador del caso de prueba:
         Audio no encontrado (archivo de texto) lanza excepción y registra una entrada de log."""
 
         self._assert_carga_falla_y_log(AudioFormatError, archivo_no_audio)
 
-    def test_audio_no_soportado(self, audio_formatos_no_soportados):
+    def test_audio_no_soportado_lanza_AudioFormatError(
+        self, audio_formatos_no_soportados
+    ):
         """TODO: identificador del caso de prueba:
         Audio en formato no soportado lanza excepción y registra una entrada de log."""
 
         self._assert_carga_falla_y_log(AudioFormatError, audio_formatos_no_soportados)
 
-    def test_audio_corrupto(self, audio_corrupto):
+    def test_audio_corrupto_lanza_AudioFormatError(self, audio_corrupto):
         """TODO: identificador del caso de prueba:
         Audio corrupto (texto como wav) lanza excepción y registra una entrada de log."""
 
         self._assert_carga_falla_y_log(AudioFormatError, audio_corrupto)
 
-    def test_audio_demasiado_largo(self, audio_largo):
+    def test_audio_demasiado_largo_lanza_AudioDurationError(self, audio_largo):
         """TODO: identificador del caso de prueba:
         Audio de 240s (> 120s default) lanza excepción y registra una entrada de log."""
 
         self._assert_carga_falla_y_log(AudioDurationError, audio_largo)
 
-    def test_audio_demasiado_corto(self, audio_corto):
+    def test_audio_demasiado_corto_lanza_AudioDurationError(self, audio_corto):
         """TODO: identificador del caso de prueba:
         Audio de 0.25s (< 0.5s default) lanza excepción y registra una entrada de log."""
         self._assert_carga_falla_y_log(AudioDurationError, audio_corto)
 
-    def test_audio_silencioso(self, audio_silencioso):
+    def test_audio_silencioso_lanza_AudioSilentError(self, audio_silencioso):
         """TODO: identificador del caso de prueba:
         Audio completamente silencioso lanza excepción y registra una entrada de log."""
         self._assert_carga_falla_y_log(AudioSilentError, audio_silencioso)
