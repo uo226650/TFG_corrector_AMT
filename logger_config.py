@@ -1,8 +1,8 @@
+import logging
 import os
 import sys
-import logging
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from datetime import datetime
-from contextlib import redirect_stderr, redirect_stdout, contextmanager
 from io import StringIO
 
 

@@ -19,3 +19,4 @@ wheels/
 
 # Archivos de dev
 notas.md
+.DS_store

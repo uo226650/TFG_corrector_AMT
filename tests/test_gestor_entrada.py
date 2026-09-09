@@ -3,18 +3,19 @@ Tests de componente para el gestor de entrada (etapa 1).
 Casos: TODO: identificador de los casos de prueba del documento TFG.
 """
 
-import pytest
-from pathlib import Path
-import numpy as np
 import logging
+from pathlib import Path
 
-from src.etapas.gestor_entrada.gestor_entrada import cargar_audio
+import numpy as np
+import pytest
+
 from src.etapas.gestor_entrada.excepciones_entrada import (
-    AudioNotFoundError,
-    AudioFormatError,
     AudioDurationError,
+    AudioFormatError,
+    AudioNotFoundError,
     AudioSilentError,
 )
+from src.etapas.gestor_entrada.gestor_entrada import cargar_audio
 
 
 class TestCargarAudio:

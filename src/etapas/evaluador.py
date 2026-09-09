@@ -1,3 +1,8 @@
+import logging
+
+import mir_eval
+import pandas as pd
+
 """
 Calcula métricas.
 Compara la transcripción inicial con una referencia manual.

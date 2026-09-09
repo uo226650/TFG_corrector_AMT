@@ -3,15 +3,19 @@ Fixtures globales para todos los tests del proyecto.
 Genera archivos de audio de forma programática, garantizando reproducibilidad.
 """
 
-import pytest
-import numpy as np
-import soundfile as sf
 from enum import Enum
+
+import numpy as np
+import pytest
+import soundfile as sf
+
+from src.dominio.nota import Nota
+from src.dominio.transcripción import Transcripción
 from src.etapas.gestor_entrada.validadores_entrada import (
     FORMATOS_SOPORTADOS,
-    SR,
-    MIN_DURACION,
     MAX_DURACION,
+    MIN_DURACION,
+    SR,
 )
 
 FORMATOS_GENERABLES = [f for f in FORMATOS_SOPORTADOS if f != "M4A"]

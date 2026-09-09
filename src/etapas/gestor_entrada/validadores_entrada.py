@@ -1,14 +1,14 @@
-# TODO: validar que el audio es monofónico?
-
 import logging
 from pathlib import Path
-import soundfile as sf
+
 import librosa
 import numpy as np
+import soundfile as sf
+
 from .excepciones_entrada import (
-    AudioNotFoundError,
-    AudioFormatError,
     AudioDurationError,
+    AudioFormatError,
+    AudioNotFoundError,
     AudioSilentError,
 )
 

@@ -4,17 +4,17 @@ Encapsula la herramienta externa AMT.
 Solicita y proporciona la transcripción inicial de un audio vocal monofónico.
 """
 
+import csv
+import logging
 import os
 import sys
-import logging
-import csv
-
 from pathlib import Path
 from typing import Protocol
 
-from logger_config import capturar_prints
-from basic_pitch.inference import predict_and_save
 from basic_pitch import ICASSP_2022_MODEL_PATH
+from basic_pitch.inference import predict_and_save
+
+from logger_config import capturar_prints
 from src.dominio.nota import Nota
 from src.dominio.transcripción import Transcripción
 

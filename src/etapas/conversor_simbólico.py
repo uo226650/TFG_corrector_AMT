@@ -1,15 +1,15 @@
 """
 Transforma la salida de la herramienta AMT a un modelo común.
-"""
+"""  # noqa: N999
 
-import os
-import logging
 import csv
+import logging
+import os
+from dataclasses import asdict, fields
 from pathlib import Path
-from dataclasses import fields, asdict
 
 from src.dominio.transcripción import Transcripción
-from src.etapas.adaptador_AMT import AdaptadorAMT
+from src.etapas.adaptador_amt import AdaptadorAMT
 
 # Crea logger para el conversor simbólico
 logger = logging.getLogger(__name__)

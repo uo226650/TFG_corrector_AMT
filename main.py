@@ -1,20 +1,20 @@
 import argparse
 import logging
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from logger_config import setup_logging
-from src.etapas.gestor_entrada.excepciones_entrada import AudioValidationError
-from src.etapas.gestor_entrada.gestor_entrada import cargar_audio
-from src.etapas.adaptador_AMT import (
-    transcribir_audio,
+from src.etapas.adaptador_amt import (
     DEFAULT_ADAPTADOR_AMT,
     REGISTRO_ADAPTADORES,
+    transcribir_audio,
 )
 from src.etapas.conversor_simbólico import convertir_formato
 from src.etapas.corrector import corregir_transcripción
 from src.etapas.evaluador import evaluar_transcripciones
 from src.etapas.generador_informes import generar_informe
+from src.etapas.gestor_entrada.excepciones_entrada import AudioValidationError
+from src.etapas.gestor_entrada.gestor_entrada import cargar_audio
 
 setup_logging()
 logger = logging.getLogger(__name__)

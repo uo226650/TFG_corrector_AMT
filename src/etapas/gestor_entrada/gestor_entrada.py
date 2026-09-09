@@ -1,6 +1,7 @@
 import logging
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 
 from .validadores_entrada import validar_entrada
 
