@@ -1,4 +1,5 @@
 """
+Etapa 2. Adaptador AMT
 Encapsula la herramienta externa AMT.
 
 Solicita y proporciona la transcripción inicial de un audio vocal monofónico.
@@ -24,20 +25,49 @@ DEFAULT_ADAPTADOR_AMT = "basicpitch"
 logger = logging.getLogger(__name__)
 
 
-# Strategy Interface
+class AdaptadorNoEncontradoError(Exception):
+    """Se lanza cuando el nombre del adaptador no está registrado"""
+
+
 class AdaptadorAMT(Protocol):
+    """Protocolo para los diferentes modelos de Transcripción Musical Automática (AMT).
+
+    Define la interfaz que debe implementar todo adaptador.
+
+    Attributes:
+        nombre: Identifica el adaptador por su nombre único"""
+
     nombre: str
 
     # Strategy
-    def transcribir(self, ruta_audio: Path, ruta_salida: Path) -> Transcripción: ...
+    def transcribir(self, ruta_audio: Path, ruta_salida: Path) -> Path:
+        """Transcribe un archivo de audio a una representación simbólica.
+
+        Args:
+            ruta_audio: Ruta al archivo de audio de entrada.
+            ruta_salida: Directorio donde se guarda la transcripción automática.
+
+        Returns:
+            ruta_csv: Ruta al archivo de la transcripción generada."""
+
     # Adapter
-    def csv_a_ts(self, ruta_csv: Path) -> Transcripción: ...
+    def csv_a_ts(self, ruta_csv: Path) -> Transcripción:
+        """Convierte el CSV con la transcripción inicial resultante a la estructura normalizada interna Transcripción
+
+        Args:
+            ruta_csv: Ruta al archivo de la transcripción inicial.
+
+        Returns:
+            ts_normalizada: Transcripción que contiene una lista de eventos de Nota."""
 
 
 class AdaptadorBasicPitch:
+    """Adaptador para el modelo Basic Pitch."""
+
     nombre = "basic_pitch"
 
     def transcribir(self, ruta_audio: Path, ruta_salida: Path) -> Path:
+
         try:
             with capturar_prints(logger, f"[{self.nombre}]"):
                 predict_and_save(
@@ -107,16 +137,15 @@ REGISTRO_ADAPTADORES = {
 }
 
 
-class AdaptadorNoEncontradoError(Exception):
-    """Se lanza cuando el nombre del adaptador no está registrado"""
-
-    pass
-
-
-def _obtener_adaptador_amt(nombre: str) -> AdaptadorAMT:  # Factory
+def _obtener_adaptador_amt(nombre: str) -> AdaptadorAMT:
     """
+    Factoría que obtiene un adaptador AMT registrado por su nombre.
+
+    Args:
+        nombre: Nombre del adaptador.
+
     Raises:
-        AdaptadorNoEncontradoError: Si el nombre no está registrado
+        AdaptadorNoEncontradoError: Si el nombre no está registrado en REGISTRO_ADAPTADORES.
     """
     try:
         adaptador = REGISTRO_ADAPTADORES[nombre.lower()]
@@ -134,16 +163,17 @@ def transcribir_audio(ruta_archivo: Path, adaptador: str):
     Transcribe el archivo de entrada:
 
         - Verifica la existencia del adaptador AMT. En caso de no encontrar el adaptador solicitado utiliza el adaptador por defecto.
-        - Solicita la transcripción automática
+        - Solicita la transcripción automática.
 
     Args:
         ruta: Ruta al archivo de audio.
-        adaptador: Nombre de la herramienta AMT a utilizar
+        adaptador: Nombre de la herramienta AMT a utilizar.
 
     Returns:
-        ts_inicial: Transcripción automática inicial cruda
-        adaptador_amt: Nombre de la herramienta AMT que ha proporcionado esa transcripción ts_incial
+        ts_inicial: Transcripción automática inicial cruda.
+        adaptador_amt: Nombre de la herramienta AMT que ha proporcionado esa transcripción ts_incial.
     """
+
     logger.info("[ADAPTADOR_AMT] Transcribiendo con AMT externa")
 
     try:
@@ -161,9 +191,7 @@ def transcribir_audio(ruta_archivo: Path, adaptador: str):
     os.makedirs(ts_dirname, exist_ok=True)
 
     try:
-        ts_inicial_ruta = adaptador_amt.transcribir(
-            ruta_archivo, Path(ts_dirname)
-        )  # Método. No detecta estáticamente la falta de argumentos
+        ts_inicial_ruta = adaptador_amt.transcribir(ruta_archivo, Path(ts_dirname))
         return ts_inicial_ruta, adaptador_amt
     except FileNotFoundError as e:
         logger.critical("[ADAPTADOR_AMT] %s.", e)

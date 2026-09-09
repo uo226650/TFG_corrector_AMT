@@ -1,3 +1,9 @@
+"""
+Etapa 1. Gestor de entrada.
+Valida que los archivos de audio de entrada presentan
+un formato soportado por los siguientes subsistemas de la canalización
+"""
+
 import logging
 from pathlib import Path
 

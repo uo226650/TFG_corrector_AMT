@@ -45,6 +45,9 @@ def validar_entrada(
         min_duración: Valor mínimo para validar que no se trata de un audio vacío
         sr_objetivo: Sample rate esperado. Para AMT con BasicPitch es 22050Hz. En caso de ser otro resamplea (Input audio maybe be of any sample rate, however, all audio will be resampled to 22050 Hz before processing.)
         rms_umbral: Root Mean Square es el volumen/energía promedio del audio. Rango[0-1]: 0.0 = silencio total, 1.0 = audio al máximo
+
+    Returns:
+        Tupla (audio, sr). Audio es un ndarray y sr la frecuencia de muestreo real tras la carga.
     """
 
     logger.debug("[ETAPA 1] Validando header: %s", ruta)
@@ -75,22 +78,46 @@ def _validar_archivo_existe(ruta: Path):
         raise AudioNotFoundError(f"Archivo no válido o no existe: {ruta}")
 
 
-# HEADER, sin necesidad de cargar el audio completo
 def _get_audio_info(ruta: Path) -> sf._SoundFileInfo:
+    """
+    Obtiene metadatos del audio sin cargar el contenido completo.
+
+    Utiliza soundfile para leer solo la cabecera.
+
+    Args:
+        ruta: Ruta al archivo de audio.
+
+    Returns:
+        Objeto SoundFileInfo.
+
+    Raises:
+        AudioFormatError: si el formato no es reconocido por libsndfile (ej. .txt renombrado a .wav)
+        o no es soportado por la canalización (ej. .aiff soportado por libsndfile pero no por el sistema).
+
+    """
     try:
         info = sf.info(ruta)
-    except (
-        RuntimeError
-    ) as e:  # Formato no reconocido por libsndfile. Ej. txt renombrado a wav
+    except RuntimeError as e:
         raise AudioFormatError(f"Formato incorrecto o corrupto: {e} - {ruta}") from e
 
     if info.format not in FORMATOS_SOPORTADOS:
-        # Formato soportado por libsndfile pero no por mi sistema, Ej. audio.aiff
         raise AudioFormatError(f"Formato de audio {info.format} no soportado")
     return info
 
 
 def _validar_duración(info: sf._SoundFileInfo, max_seg: float, min_seg: float):
+    """
+    Valida que la duración del audio esté dentro del rango permitido.
+
+    Args:
+        info: Metadatos del audio.
+        max_seg: Duración máxima permitida en segundos.
+        mix_seg: Duración mínima permitida en segundos.
+
+    Raises:
+        AudioDurationError: si info.duration está fuera del rango [min_seg, max_seg].
+
+    """
     if info.duration > max_seg:
         raise AudioDurationError(
             f"Duración {info.duration:.1f}s > máximo {max_seg}s - {info.name}"
@@ -102,6 +129,20 @@ def _validar_duración(info: sf._SoundFileInfo, max_seg: float, min_seg: float):
 
 
 def _cargar_contenido(ruta: Path, sr: int) -> tuple[np.ndarray, int]:
+    """
+    Decodifica el contenido del audio.
+
+    Args:
+        ruta: Ruta al archivo de audio.
+        sr: Frecuencia de muestreo para el resampleo.
+
+    Returns:
+        Tupla (audio, sr). Audio es un ndarray y sr la frecuencia de muestreo real tras la carga.
+
+    Raises:
+        AudioFormatError: si librosa falla al decodificar el archivo.
+
+    """
     try:
         audio, sr = librosa.load(ruta, sr=sr, mono=True)
         return audio, sr
@@ -109,7 +150,21 @@ def _cargar_contenido(ruta: Path, sr: int) -> tuple[np.ndarray, int]:
         raise AudioFormatError(f"Error decodificando audio: {e} - {ruta}") from e
 
 
-def _validar_no_silencio(y: np.ndarray, umbral: float):
-    rms = librosa.feature.rms(y=y).mean()
+def _validar_no_silencio(audio: np.ndarray, umbral: float):
+    """
+    Valida si el audio contiene señal útil y no es solo silencio.
+
+    Utiliza librosa para calcular el volumen/energía promedio del audio (Root Mean Square).
+    Rango[0-1]: 0.0 = silencio total, 1.0 = audio al máximo
+
+    Args:
+        audio: np.ndarray que contiene la señal de audio.
+        umbral: volumen mínimo para considerar no silencio.
+
+    Raises:
+        AudioSilentError: si el volumen está por debajo del mínimo indicado por el umbral.
+
+    """
+    rms = librosa.feature.rms(y=audio).mean()
     if rms < umbral:
         raise AudioSilentError(f"Audio silencioso: RMS={rms:.5f} < {umbral}")

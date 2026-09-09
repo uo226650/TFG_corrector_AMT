@@ -11,7 +11,7 @@ def setup_logging():
     # Carpeta para logs y formato de nombre
     log_dirname = "logs"
     os.makedirs(log_dirname, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    timestamp = datetime.now().astimezone().strftime("%Y-%m-%d_%H.%M.%S")
     log_filename = f"{log_dirname}/{timestamp}.log"
 
     main_logger = logging.getLogger()
