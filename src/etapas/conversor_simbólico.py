@@ -1,4 +1,5 @@
 """
+Etapa 3. Conversor Simbólico
 Transforma la salida de la herramienta AMT a un modelo común.
 """  # noqa: N999
 
@@ -8,6 +9,7 @@ import os
 from dataclasses import asdict, fields
 from pathlib import Path
 
+from src.dominio.nota import Nota
 from src.dominio.transcripción import Transcripción
 from src.etapas.adaptador_amt import AdaptadorAMT
 
@@ -31,16 +33,20 @@ def convertir_formato(ts_inicial_ruta: Path, adaptador: AdaptadorAMT) -> Transcr
 
     logger.info("[CONVERSOR] Conviertiendo tabla %s a formato interno", ts_inicial_ruta)
     # Normaliza a formato interno
-    ts_normalizada = adaptador.csv_a_ts(ts_inicial_ruta)
+    notas_inicial = adaptador.csv_a_notas(ts_inicial_ruta)
+
+    if not notas_inicial:
+        logger.warning("[CONVERSOR] %s contiene 0 notas válidas", ts_inicial_ruta)
 
     # Ordena eventos
-    notas_ordenadas = sorted(ts_normalizada.eventos, key=lambda n: (n.onset, n.pitch))
+    notas_ordenadas = sorted(notas_inicial, key=lambda n: (n.onset, n.pitch))
 
     # Reasigna identificadores
     for idx, nota in enumerate(notas_ordenadas):
         nota.identificador = idx + 1
 
-    ts_normalizada.eventos = notas_ordenadas
+    # Genera estructura interna
+    ts_normalizada = Transcripción(notas=notas_ordenadas, ruta_origen=ts_inicial_ruta)
 
     # Directorio para guardar la salida
     ts_dirname = f"data/ts_normalizada/{adaptador.nombre}"
@@ -51,22 +57,6 @@ def convertir_formato(ts_inicial_ruta: Path, adaptador: AdaptadorAMT) -> Transcr
     columnas = _exportar_trancripción_csv(ts_normalizada, ts_normalizada_ruta)
 
     # Registra datos de la etapa
-    _extraer_características(ts_normalizada, columnas, ts_normalizada_ruta)
-
-
-def _extraer_características(
-    ts: Transcripción, columnas: list[str], ts_normalizada_ruta: Path
-):
-    notas = ts.eventos
-    total = len(notas)
-    duración_total = sum(n.offset - n.onset for n in notas) if total else 0.0
-    pitch_min = min((n.pitch for n in notas), default=0)
-    pitch_max = max((n.pitch for n in notas), default=0)
-    inicio = min(n.onset for n in notas) if total else 0.0
-    fin = max(n.offset for n in notas) if total else 0.0
-    duración_toma = fin - inicio
-    # TODO: WARNING si duración_sonora (suma de todas las duraciones de las notas) > duración_toma (total de sonoridad desde que empieza primera nota hasta que acaba la última)
-
     logger.info(
         "[CONVERSOR] Exportación completada -> %s\n"
         " - Notas totales: %s \n"
@@ -74,14 +64,14 @@ def _extraer_características(
         " - Rango temporal: %.2fs - %.2fs (longitud: %.2fs)| Duración sonora: %.2fs\n"
         " - Rango de pitch: %s - %s MIDI\n",
         ts_normalizada_ruta,
-        total,
+        ts_normalizada.num_notas,
         ", ".join(columnas),
-        inicio,
-        fin,
-        duración_toma,
-        duración_total,
-        pitch_min,
-        pitch_max,
+        ts_normalizada.inicio,
+        ts_normalizada.fin,
+        ts_normalizada.duración_toma,
+        ts_normalizada.duración_sonora,
+        ts_normalizada.pitch_min,
+        ts_normalizada.pitch_max,
     )
 
 
@@ -90,13 +80,19 @@ def _exportar_trancripción_csv(ts: Transcripción, ruta_salida: Path):
     Exporta una Transcripción (en formato interno) a CSV.
         - Una fila por cada Nota
     """
-    # TODO: exceptions
-    # Exporta a csv
-    columnas = [f.name for f in fields(ts.eventos[0])]
+    if not ts.notas:
+        logger.warning("[CONVERSOR] Exportando transcripción vacía: %s", ruta_salida)
+        columnas = [f.name for f in fields(Nota)]
+        with open(ruta_salida, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=columnas)
+            writer.writeheader()
+        return columnas
+
+    columnas = [f.name for f in fields(ts.notas[0])]
     with open(ruta_salida, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=columnas)
         writer.writeheader()
 
-        for nota in ts.eventos:
+        for nota in ts.notas:
             writer.writerow(asdict(nota))
-        return columnas
+    return columnas

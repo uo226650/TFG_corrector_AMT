@@ -51,14 +51,14 @@ class AdaptadorAMT(Protocol):
             ruta_csv: Ruta al archivo de la transcripción generada."""
 
     # Adapter
-    def csv_a_ts(self, ruta_csv: Path) -> Transcripción:
-        """Convierte el CSV con la transcripción inicial resultante a la estructura normalizada interna Transcripción
+    def csv_a_notas(self, ruta_csv: Path) -> list[Nota]:
+        """Convierte el CSV con la transcripción inicial a la estructura normalizada interna retornando una secuencia de notas.
 
         Args:
             ruta_csv: Ruta al archivo de la transcripción inicial.
 
         Returns:
-            ts_normalizada: Transcripción que contiene una lista de eventos de Nota."""
+            notas: lista de eventos de Nota."""
 
 
 class AdaptadorBasicPitch:
@@ -94,7 +94,7 @@ class AdaptadorBasicPitch:
 
         return ruta_csv
 
-    def csv_a_ts(self, ruta_csv: Path) -> Transcripción:
+    def csv_a_notas(self, ruta_csv: Path) -> list[Nota]:
 
         with open(ruta_csv, newline="", encoding="utf-8") as ts_inicial:
             notas = []
@@ -121,7 +121,7 @@ class AdaptadorBasicPitch:
                         row,
                         e,
                     )
-        return Transcripción(eventos=notas)
+        return notas
 
 
 # class AdaptadorOtroAMT:

@@ -75,7 +75,7 @@ class TestRegistroAdaptadores:
         AdaptadorBasicPitch tiene método csv_a_ts."""
 
         assert hasattr(AdaptadorBasicPitch, "csv_a_ts")
-        assert callable(AdaptadorBasicPitch.csv_a_ts)
+        assert callable(AdaptadorBasicPitch.csv_a_notas)
 
 
 # ─── Tests de Componente: transcribir_audio ───────────────────────────────────
