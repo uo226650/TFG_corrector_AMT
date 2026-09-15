@@ -74,7 +74,7 @@ class TestRegistroAdaptadores:
         """TODO: identificador del caso de prueba:
         AdaptadorBasicPitch tiene método csv_a_ts."""
 
-        assert hasattr(AdaptadorBasicPitch, "csv_a_ts")
+        assert hasattr(AdaptadorBasicPitch, "csv_a_notas")
         assert callable(AdaptadorBasicPitch.csv_a_notas)
 
 
@@ -155,10 +155,15 @@ class TestTranscribirAudio:
             adaptador_usado.nombre == REGISTRO_ADAPTADORES[DEFAULT_ADAPTADOR_AMT].nombre
         )
 
-    def test_transcribir_csv_no_generado_produce_system_exit(self, audio_corrupto):
+    def test_transcribir_csv_no_generado_lanza_FileNotFoundError(
+        self, audio_corrupto, caplog
+    ):
         """TODO: identificador del caso de prueba:
-        Si BasicPitch no genera CSV, se produce sys.exit(1)."""
+        Si BasicPitch no genera CSV, se produce una excepción FileNotFoundError."""
 
-        with pytest.raises(SystemExit) as exc_info:
+        with pytest.raises(FileNotFoundError):
             transcribir_audio(audio_corrupto, "basicpitch")
-        assert exc_info.value.code == 1
+
+        assert "CRITICAL" in caplog.text
+        assert "no generó" in caplog.text
+        assert caplog.records[0].name == "src.etapas.adaptador_amt"

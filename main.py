@@ -36,21 +36,25 @@ def flujo_completo(ruta_audio: Path, adaptador_amt_nombre: str):
 
     # Etapa 1: Carga y validación del archivo de audio
     try:
-        audio, sr = cargar_audio(Path(ruta_audio))
+        cargar_audio(Path(ruta_audio))
     except AudioValidationError as e:
         logger.critical("[PIPELINE] %s", e)
         sys.exit(1)  # Salida controlada, no se puede continuar con la canalización
 
     # Etapa 2: Transcripción del audio con herramienta externa
-    ts_inicial_ruta, adaptador_ts = transcribir_audio(
-        Path(ruta_audio), adaptador_amt_nombre
-    )
+    try:
+        ts_inicial_ruta, adaptador_ts = transcribir_audio(
+            Path(ruta_audio), adaptador_amt_nombre
+        )
+    except FileNotFoundError as e:
+        logger.critical("[PIPELINE] %s", e)
+        sys.exit(1)  # Salida controlada, no se puede continuar con la canalización
 
     # Etapa 3: Conversión a formato interno
     ts_normalizada = convertir_formato(ts_inicial_ruta, adaptador_ts)
 
     # Etapa 4: Corrección de la transcripción inicial
-    ts_corregida = corregir_transcripción()
+    ts_corregida = corregir_transcripción(ts_normalizada)
 
     # Etapa 5: Generación de métricas
     evaluar_transcripciones()

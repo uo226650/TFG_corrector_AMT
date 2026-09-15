@@ -8,7 +8,6 @@ Solicita y proporciona la transcripción inicial de un audio vocal monofónico.
 import csv
 import logging
 import os
-import sys
 from pathlib import Path
 from typing import Protocol
 
@@ -17,7 +16,6 @@ from basic_pitch.inference import predict_and_save
 
 from logger_config import capturar_prints
 from src.dominio.nota import Nota
-from src.dominio.transcripción import Transcripción
 
 DEFAULT_ADAPTADOR_AMT = "basicpitch"
 
@@ -196,4 +194,4 @@ def transcribir_audio(ruta_archivo: Path, adaptador: str):
     except FileNotFoundError as e:
         logger.critical("[ADAPTADOR_AMT] %s.", e)
         logger.critical("Detenido el proceso de transcripción")
-        sys.exit(1)
+        raise FileNotFoundError(e)

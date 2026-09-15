@@ -73,6 +73,7 @@ def convertir_formato(ts_inicial_ruta: Path, adaptador: AdaptadorAMT) -> Transcr
         ts_normalizada.pitch_min,
         ts_normalizada.pitch_max,
     )
+    return ts_normalizada
 
 
 def _exportar_trancripción_csv(ts: Transcripción, ruta_salida: Path):
