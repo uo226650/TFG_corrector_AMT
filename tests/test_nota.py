@@ -4,6 +4,7 @@ Casos: TODO
 """
 
 import pytest
+
 from src.dominio.nota import Nota, NotaValidationError
 
 

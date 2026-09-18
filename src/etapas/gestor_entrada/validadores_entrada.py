@@ -24,6 +24,7 @@ FORMATOS_SOPORTADOS = {
 SR = 22050
 MIN_DURACION = 0.5  # segundos
 MAX_DURACION = 120  # segundos
+RMS_UMBRAL_DEFAULT = 0.01
 
 
 def validar_entrada(
@@ -31,7 +32,7 @@ def validar_entrada(
     max_duración: float = MAX_DURACION,
     min_duración: float = MIN_DURACION,
     sr_objetivo: int = SR,
-    rms_umbral: float = 0.01,
+    rms_umbral: float = RMS_UMBRAL_DEFAULT,
 ) -> tuple[np.ndarray, int]:
     """
     Valida el archivo de entrada

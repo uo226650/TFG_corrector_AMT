@@ -32,7 +32,7 @@ class TestCargarAudio:
         """TODO: identificador del caso de prueba:
         Audio válido devuelve info y registra dos entradas de log."""
 
-        audio, sr = cargar_audio(audio_formatos_soportados)
+        audio, _sr = cargar_audio(audio_formatos_soportados)
         assert isinstance(audio, np.ndarray)
         self._assert_log(self.VALIDO_LOG_COUNT)
 
@@ -40,7 +40,7 @@ class TestCargarAudio:
         """TODO: identificador del caso de prueba:
         Audio válido en formato m4a devuelve info y registra dos entradas de log."""
 
-        audio, sr = cargar_audio(audio_m4a_renombrado)
+        audio, _sr = cargar_audio(audio_m4a_renombrado)
         assert isinstance(audio, np.ndarray)
         self._assert_log(self.VALIDO_LOG_COUNT)
 

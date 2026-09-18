@@ -10,6 +10,7 @@ MIDI_límite_superior = 127
 @dataclass
 class Nota:
     """Evento de nota musical. Representa una nota detectada por un modelo de AMT.
+
     Attributes:
         pitch: Altura tonal en formato MIDI (0-127).
         onset: Instante de inicio en segundos.
