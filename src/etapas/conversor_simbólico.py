@@ -3,14 +3,11 @@ Etapa 3. Conversor Simbólico
 Transforma la salida de la herramienta AMT a un modelo común.
 """  # noqa: N999
 
-import csv
 import logging
 import os
-from dataclasses import asdict, fields
 from pathlib import Path
 
-from src.dominio.nota import Nota
-from src.dominio.transcripción import Transcripción
+from src.dominio.transcripción import TranscripcionVacíaError, Transcripción
 from src.etapas.adaptador_amt import AdaptadorAMT
 
 # Crea logger para el conversor simbólico
@@ -54,7 +51,12 @@ def convertir_formato(ts_inicial_ruta: Path, adaptador: AdaptadorAMT) -> Transcr
     ts_normalizada_ruta = f"{ts_dirname}/{ts_inicial_ruta.name}"
 
     # Exporta a csv
-    columnas = _exportar_trancripción_csv(ts_normalizada, ts_normalizada_ruta)
+    try:
+        columnas = ts_normalizada.exportar_a_csv(ts_normalizada_ruta)
+    except TranscripcionVacíaError:
+        logger.warning(
+            "[CONVERSOR] Exportando transcripción vacía: %s", ts_normalizada_ruta
+        )
 
     # Registra datos de la etapa
     logger.info(
@@ -74,26 +76,3 @@ def convertir_formato(ts_inicial_ruta: Path, adaptador: AdaptadorAMT) -> Transcr
         ts_normalizada.pitch_max,
     )
     return ts_normalizada
-
-
-def _exportar_trancripción_csv(ts: Transcripción, ruta_salida: Path):
-    """
-    Exporta una Transcripción (en formato interno) a CSV.
-        - Una fila por cada Nota
-    """
-    if not ts.notas:
-        logger.warning("[CONVERSOR] Exportando transcripción vacía: %s", ruta_salida)
-        columnas = [f.name for f in fields(Nota)]
-        with open(ruta_salida, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=columnas)
-            writer.writeheader()
-        return columnas
-
-    columnas = [f.name for f in fields(ts.notas[0])]
-    with open(ruta_salida, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=columnas)
-        writer.writeheader()
-
-        for nota in ts.notas:
-            writer.writerow(asdict(nota))
-    return columnas
