@@ -15,7 +15,7 @@ from basic_pitch import ICASSP_2022_MODEL_PATH
 from basic_pitch.inference import predict_and_save
 
 from logger_config import capturar_prints
-from src.dominio.nota import Nota
+from src.dominio.nota import Nota, reiniciar_contador_nota
 
 DEFAULT_ADAPTADOR_AMT = "basicpitch"
 
@@ -96,6 +96,7 @@ class AdaptadorBasicPitch:
 
         with open(ruta_csv, newline="", encoding="utf-8") as ts_inicial:
             notas = []
+            reiniciar_contador_nota()
             reader = csv.DictReader(ts_inicial)
             next(reader)
             for num, row in enumerate(reader, start=2):

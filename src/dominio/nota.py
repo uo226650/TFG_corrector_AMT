@@ -1,10 +1,22 @@
 import uuid
 from dataclasses import dataclass, field
-from itertools import count
 
-_contador = count(1)
+_contador = 0
 MIDI_límite_inferior = 0
 MIDI_límite_superior = 127
+
+
+def generar_siguiente_id() -> int:
+    """Incrementa el contador global y devuelve el nuevo ID."""
+    global _contador
+    _contador += 1
+    return _contador
+
+
+def reiniciar_contador_nota():
+    """Resetea el contador para volver a asignar identificadores desde 0."""
+    global _contador
+    _contador = 0
 
 
 @dataclass
@@ -32,7 +44,7 @@ class Nota:
     confianza: float | None = None
     observaciones: str | None = None
     identificador: int = field(
-        default_factory=lambda: next(_contador)
+        default_factory=generar_siguiente_id
     )  # ID para trazabilidad
     uid: str = field(default_factory=lambda: uuid.uuid4().hex[:8])  # ID único, técnico
     uid_original: str | None = None  # Apunta a la nota original si esta es corregida
