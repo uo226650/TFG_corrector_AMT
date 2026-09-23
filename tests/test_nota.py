@@ -5,7 +5,7 @@ Casos: TODO
 
 import pytest
 
-from src.dominio.nota import Nota, NotaValidationError
+from src.dominio.nota import Nota, NotaValidationError, reiniciar_contador_nota
 
 
 class TestNota:
@@ -14,6 +14,7 @@ class TestNota:
     def test_creación_nota_válida_todos_los_campos(self):
         """TODO: identificador del caso de prueba:
         Nota con todos los campos explícitos."""
+        reiniciar_contador_nota()
         nota = Nota(
             pitch=60,
             onset=0.0,
@@ -22,7 +23,7 @@ class TestNota:
             confianza=0.9,
             observaciones="test",
             identificador=1,
-            uid=2,
+            uid="a1b2c3d4",
             uid_original="1a2b3c4d",
         )
         assert nota.pitch == 60
@@ -32,12 +33,13 @@ class TestNota:
         assert nota.confianza == 0.9
         assert nota.observaciones == "test"
         assert nota.identificador == 1
-        assert nota.uid == 2
+        assert nota.uid == "a1b2c3d4"
         assert nota.uid_original == "1a2b3c4d"
 
     def test_creación_nota_valores_por_defecto(self):
         """TODO: identificador del caso de prueba:
         Nota con valores default (fuente, confianza, observaciones, identificador, uid, uid_original)."""
+        reiniciar_contador_nota()
         nota = Nota(
             pitch=62,
             onset=0.5,

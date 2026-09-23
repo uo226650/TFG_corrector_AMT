@@ -11,6 +11,7 @@ import soundfile as sf
 
 from src.dominio.nota import Nota
 from src.dominio.transcripción import Transcripción
+from src.etapas.corrector.corrector import ReglaEliminaciónSolapamientos
 from src.etapas.gestor_entrada.validadores_entrada import (
     FORMATOS_SOPORTADOS,
     MAX_DURACION,
@@ -146,3 +147,47 @@ def archivo_no_audio(tmp_path):
     ruta = tmp_path / "texto.txt"
     ruta.write_text("contenido de texto")
     return ruta
+
+
+######### ────────── Fixtures de Dominio ────────── #############
+
+
+@pytest.fixture
+def nota_válida():
+    """Nota Do4 (MIDI 60) de 0.5s de duración."""
+    return Nota(
+        pitch=60,
+        onset=0.0,
+        offset=0.5,
+        fuente="BasicPitch",
+        confianza=0.9,
+        observaciones="test",
+    )
+
+
+@pytest.fixture
+def notas_escala():
+    """7 notas representando escala Do-Re-Mi-Fa-Sol-La-Si."""
+    return [
+        Nota(60, 0.0, 0.5, "BasicPitch", 0.90),
+        Nota(62, 0.5, 1.0, "BasicPitch", 0.88),
+        Nota(64, 1.0, 1.5, "BasicPitch", 0.92),
+        Nota(65, 1.5, 2.0, "BasicPitch", 0.87),
+        Nota(67, 2.0, 2.5, "BasicPitch", 0.91),
+        Nota(69, 1.0, 1.5, "BasicPitch", 0.92),
+        Nota(71, 1.5, 2.0, "BasicPitch", 0.87),
+    ]
+
+
+@pytest.fixture
+def transcripción_escala_válida(notas_escala):
+    """Transcripción con 7 notas de escala."""
+    return Transcripción(notas=notas_escala)
+
+
+######### ────────── Fixtures de Reglas ────────── #############
+
+
+@pytest.fixture(scope="session")
+def regla_eliminación_solapamientos():
+    return ReglaEliminaciónSolapamientos()
