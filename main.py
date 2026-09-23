@@ -10,7 +10,7 @@ from src.etapas.adaptador_amt import (
     transcribir_audio,
 )
 from src.etapas.conversor_simbólico import convertir_formato
-from src.etapas.corrector import corregir_transcripción
+from src.etapas.corrector.corrector import corregir_transcripción
 from src.etapas.evaluador import evaluar_transcripciones
 from src.etapas.generador_informes import generar_informe
 from src.etapas.gestor_entrada.excepciones_entrada import AudioValidationError
@@ -54,7 +54,9 @@ def flujo_completo(ruta_audio: Path, adaptador_amt_nombre: str):
     ts_normalizada = convertir_formato(ts_inicial_ruta, adaptador_ts)
 
     # Etapa 4: Corrección de la transcripción inicial
-    ts_corregida = corregir_transcripción(ts_normalizada)
+    ts_corregida = corregir_transcripción(
+        ts_normalizada, ["eliminación_solapamientos"]
+    )  # TODO: configuración desde archivo YAML
 
     # Etapa 5: Generación de métricas
     evaluar_transcripciones()
