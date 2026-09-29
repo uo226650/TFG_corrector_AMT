@@ -3,13 +3,17 @@ import logging
 import sys
 from pathlib import Path
 
+import yaml
+
 from logger_config import setup_logging
+from src.dominio.ejecucion_experimental import EjecucionExperimental
 from src.etapas.adaptador_amt import (
     DEFAULT_ADAPTADOR_AMT,
     REGISTRO_ADAPTADORES,
     transcribir_audio,
 )
 from src.etapas.conversor_simbólico import convertir_formato
+from src.etapas.corrector.configuracion_correccion import ConfigCorrector
 from src.etapas.corrector.corrector import corregir_transcripción
 from src.etapas.evaluador import evaluar_transcripciones
 from src.etapas.generador_informes import generar_informe
@@ -18,6 +22,17 @@ from src.etapas.gestor_entrada.gestor_entrada import cargar_audio
 
 setup_logging()
 logger = logging.getLogger(__name__)
+
+DEFAULT_CONFIG = "config.yaml"
+
+
+def cargar_config(ruta_yaml: Path) -> ConfigCorrector:
+    with open(ruta_yaml, "r", encoding="utf-8") as archivo:
+        config = yaml.safe_load(archivo) or {}
+
+    return ConfigCorrector(
+        reglas_activas=config.get("reglas_activas", []),
+    )
 
 
 def main(args: argparse.Namespace):
@@ -54,9 +69,13 @@ def flujo_completo(ruta_audio: Path, adaptador_amt_nombre: str):
     ts_normalizada = convertir_formato(ts_inicial_ruta, adaptador_ts)
 
     # Etapa 4: Corrección de la transcripción inicial
+
+    config = cargar_config(Path(DEFAULT_CONFIG))
+    ejecucion = EjecucionExperimental(config=config)
+
     ts_corregida = corregir_transcripción(
-        ts_normalizada, ["eliminación_solapamientos"]
-    )  # TODO: configuración desde archivo YAML
+        ts_normalizada, config
+    )  # TODO: retornar ediciones y guardar en "ejecución"
 
     # Etapa 5: Generación de métricas
     evaluar_transcripciones()

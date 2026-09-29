@@ -10,6 +10,7 @@ import logging
 import os
 
 from src.dominio.transcripción import Transcripción
+from src.etapas.corrector.configuracion_correccion import ConfigCorrector
 from src.etapas.corrector.reglas_correccion import (
     ReglaEliminaciónSolapamientos,
     ReglaFusiónNotasCortas,
@@ -26,9 +27,8 @@ REGISTRO_REGLAS = {
 }
 
 
-# TODO: ConfigCorrector dataclass
 def corregir_transcripción(
-    ts_normalizada: Transcripción, reglas_activas: list[str]
+    ts_normalizada: Transcripción, config: ConfigCorrector
 ) -> Transcripción:
     """
     Aplica reglas de corrección a una transcripción:
@@ -36,6 +36,8 @@ def corregir_transcripción(
         - Aplica reglas activas secuencialmente
 
     """
+    reglas_activas = config.reglas_activas
+
     logger.info("[CORRECTOR] Corrigiendo transcripción inicial")
     logger.info("[CORRECTOR] Aplicando %d reglas", len(reglas_activas))
 
@@ -51,4 +53,5 @@ def corregir_transcripción(
         # Exportar transcripción intermedia
         ts_actual.exportar_a_csv(ts_regla_ruta)
 
+    # TODO: fuera del for, guardar transcripción corregida ts_actual (la resultante de aplicar todas las reglas activas)
     return ts_actual

@@ -10,13 +10,17 @@ wheels/
 .venv
 .vscode
 
+# Directorios
 /data
 /logs
 /results
 /docs
 /out
 /tests/data
+/htmlcov
 
 # Archivos de dev
 notas.md
 .DS_store
+.coverage
+.pytest_cache
