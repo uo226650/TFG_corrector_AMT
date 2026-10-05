@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
-@dataclass
+@dataclass(frozen=True)
 class ConfigCorrector:
     """Configuración para el corrector cargada desde YAML"""
 
-    reglas_activas: list[str]
+    reglas_activas: list[str] = field(default_factory=list)

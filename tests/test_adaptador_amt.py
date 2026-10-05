@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
+from src.config import GlobalConfig
 from src.etapas.adaptador_amt import (
     DEFAULT_ADAPTADOR_AMT,
     REGISTRO_ADAPTADORES,
@@ -89,7 +90,10 @@ class TestTranscribirAudio:
         self, mock_predict_and_save, tmp_path
     ):
 
-        audio = tmp_path / "test.wav"
+        config_test = GlobalConfig(root_dir=tmp_path)
+
+        audio = config_test.ruta_audios / "test.wav"
+        audio.parent.mkdir(parents=True, exist_ok=True)
         audio.touch()
         adaptador = AdaptadorBasicPitch()
 
@@ -97,39 +101,49 @@ class TestTranscribirAudio:
         def side_effect(*args, **kwargs):
             salida = kwargs["output_directory"]
             stem = kwargs["audio_path_list"][0].stem
-            (salida / f"{stem}_{adaptador.nombre}.csv").touch()
+            archivo_salida = salida / f"{stem}_{adaptador.nombre}.csv"
+            archivo_salida.parent.mkdir(parents=True, exist_ok=True)
+            archivo_salida.touch()
 
         mock_predict_and_save.side_effect = side_effect
 
-        ruta_salida = tmp_path / "out"
+        ruta_salida = config_test.ruta_ts_inicial
         ruta_salida.mkdir()
 
         ruta_csv = adaptador.transcribir(audio, ruta_salida)
 
         mock_predict_and_save.assert_called_once()
         kwargs = mock_predict_and_save.call_args.kwargs
+
         assert kwargs.get("save_notes") is True
+        assert kwargs.get("output_directory") == config_test.ruta_ts_inicial
+
         assert ruta_csv.exists()
         assert ruta_csv.name == "test_basic_pitch.csv"
+        assert ruta_csv == config_test.ruta_ts_inicial / "test_basic_pitch.csv"
 
     @patch("src.etapas.adaptador_amt.predict_and_save")
     def test_transcribir_error_externo_lanza_warning(
         self, mock_predict_and_save, tmp_path, caplog
     ):
-        audio = tmp_path / "test.wav"
-        audio.touch()
-        adaptador = AdaptadorBasicPitch()
+        config_test = GlobalConfig(root_dir=tmp_path)
 
+        audio = config_test.ruta_audios / "test.wav"
+        audio.parent.mkdir(parents=True, exist_ok=True)
+        audio.touch()
+
+        adaptador = AdaptadorBasicPitch()
         mock_predict_and_save.side_effect = RuntimeError("BasicPitch ERROR")
 
         # Genera el csv para evitar FileNotFoundError
-        ruta_salida = tmp_path / "out"
+        ruta_salida = config_test.ruta_ts_inicial
         ruta_salida.mkdir()
         (ruta_salida / "test_basic_pitch.csv").touch()
 
-        adaptador.transcribir(audio, ruta_salida)
+        with caplog.at_level("WARNING"):
+            adaptador.transcribir(audio, ruta_salida)
 
-        assert "WARNING" in caplog.text
+        assert any(record.levelname == "WARNING" for record in caplog.records)
         assert caplog.records[0].name == "src.etapas.adaptador_amt"
 
     @patch("src.etapas.adaptador_amt.predict_and_save")
@@ -144,11 +158,14 @@ class TestTranscribirAudio:
 
         mock_predict_and_save.return_value = None
 
-        _ruta, adaptador_usado = transcribir_audio(audio_path, "motor_inexistente")
+        _ruta, adaptador_usado = transcribir_audio(
+            audio_path, "motor_inexistente", GlobalConfig()
+        )
 
         # Verifica que log CRITICAL se genera con el error del adaptador no encontrado
         assert "no encontrado" in caplog.text
-        assert "CRITICAL" in caplog.text
+        assert any(record.levelname == "CRITICAL" for record in caplog.records)
+
         assert caplog.records[0].name == "src.etapas.adaptador_amt"
         assert DEFAULT_ADAPTADOR_AMT in caplog.text
         assert (
@@ -162,7 +179,7 @@ class TestTranscribirAudio:
         Si BasicPitch no genera CSV, se produce una excepción FileNotFoundError."""
 
         with pytest.raises(FileNotFoundError):
-            transcribir_audio(audio_corrupto, "basicpitch")
+            transcribir_audio(audio_corrupto, "basicpitch", GlobalConfig())
 
         assert "CRITICAL" in caplog.text
         assert "no generó" in caplog.text

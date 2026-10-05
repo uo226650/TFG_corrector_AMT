@@ -5,8 +5,11 @@ Transforma la salida de la herramienta AMT a un modelo común.
 
 import logging
 import os
+from dataclasses import fields
 from pathlib import Path
 
+from src.config import GlobalConfig
+from src.dominio.nota import Nota
 from src.dominio.transcripción import TranscripcionVacíaError, Transcripción
 from src.etapas.adaptador_amt import AdaptadorAMT
 
@@ -14,7 +17,9 @@ from src.etapas.adaptador_amt import AdaptadorAMT
 logger = logging.getLogger(__name__)
 
 
-def convertir_formato(ts_inicial_ruta: Path, adaptador: AdaptadorAMT) -> Transcripción:
+def convertir_formato(
+    ts_inicial_ruta: Path, adaptador: AdaptadorAMT, config: GlobalConfig
+) -> Transcripción:
     """
     Normaliza una transcripción bruta al formato interno:
         - Ordena eventos por onset, si dos eventos tienen el mismo onset ordena por pitch

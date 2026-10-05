@@ -15,6 +15,7 @@ from basic_pitch import ICASSP_2022_MODEL_PATH
 from basic_pitch.inference import predict_and_save
 
 from logger_config import capturar_prints
+from src.config import GlobalConfig
 from src.dominio.nota import Nota, reiniciar_contador_nota
 
 DEFAULT_ADAPTADOR_AMT = "basicpitch"
@@ -157,7 +158,7 @@ def _obtener_adaptador_amt(nombre: str) -> AdaptadorAMT:
     return adaptador
 
 
-def transcribir_audio(ruta_archivo: Path, adaptador: str):
+def transcribir_audio(ruta_archivo: Path, adaptador: str, config: GlobalConfig):
     """
     Transcribe el archivo de entrada:
 

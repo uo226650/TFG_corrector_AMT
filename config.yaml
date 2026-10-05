@@ -1,2 +1,12 @@
-reglas_activas:
-  - "eliminación_solapamientos"
+# Configuración global del sistema
+pipeline:
+  dir_audios: "data/audio"
+  dir_ts_inicial: "data/ts_inicial"
+  dir_ts_normalizada: "data/ts_normalizada"
+  dir_ts_corregida: "data/ts_corregida"
+
+# Configuración específica
+##  Etapa 4 (Corrector)
+corrector:
+  reglas_activas:
+    - "eliminación_solapamientos"

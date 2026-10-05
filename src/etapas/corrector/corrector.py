@@ -9,6 +9,7 @@ Motor que aplica reglas de corrección sobre la transcripción inicial.
 import logging
 import os
 
+from src.config import GlobalConfig
 from src.dominio.transcripción import Transcripción
 from src.etapas.corrector.configuracion_correccion import ConfigCorrector
 from src.etapas.corrector.reglas_correccion import (
@@ -28,7 +29,7 @@ REGISTRO_REGLAS = {
 
 
 def corregir_transcripción(
-    ts_normalizada: Transcripción, config: ConfigCorrector
+    ts_normalizada: Transcripción, config: GlobalConfig
 ) -> Transcripción:
     """
     Aplica reglas de corrección a una transcripción:
@@ -36,7 +37,8 @@ def corregir_transcripción(
         - Aplica reglas activas secuencialmente
 
     """
-    reglas_activas = config.reglas_activas
+    config_corrector = config.corrector
+    reglas_activas = config_corrector.reglas_activas
 
     logger.info("[CORRECTOR] Corrigiendo transcripción inicial")
     logger.info("[CORRECTOR] Aplicando %d reglas", len(reglas_activas))

@@ -1,7 +1,7 @@
 import uuid
 from dataclasses import asdict, dataclass, field
 
-from src.etapas.corrector.configuracion_correccion import ConfigCorrector
+from src.config import GlobalConfig
 
 
 @dataclass
@@ -9,7 +9,7 @@ class EjecucionExperimental:
     """
     Almacena la configuración de entrada, las ediciones y las métricas asociadas a una ejecución."""
 
-    config: ConfigCorrector  # Cargada del YAML
+    config: GlobalConfig = field(default_factory=GlobalConfig)
     uuid: str = field(default_factory=lambda: uuid.uuid4().hex[:8])
 
     ediciones_corrector: dict = field(default_factory=dict)  # Etapa 4. Corrector
@@ -20,7 +20,7 @@ class EjecucionExperimental:
         """Estructura para guardar en JSON."""
         return {
             "id": self.uuid,
-            "configuracion": asdict(self.config),
+            "configuracion_corrector": asdict(self.config.corrector),  # TODO: revisar
             "ediciones": self.ediciones_corrector,
             "metricas": self.metricas_evaluacion,
         }

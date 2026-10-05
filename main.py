@@ -3,9 +3,8 @@ import logging
 import sys
 from pathlib import Path
 
-import yaml
-
 from logger_config import setup_logging
+from src.config import cargar_config_yaml
 from src.dominio.ejecucion_experimental import EjecucionExperimental
 from src.etapas.adaptador_amt import (
     DEFAULT_ADAPTADOR_AMT,
@@ -23,16 +22,7 @@ from src.etapas.gestor_entrada.gestor_entrada import cargar_audio
 setup_logging()
 logger = logging.getLogger(__name__)
 
-DEFAULT_CONFIG = "config.yaml"
-
-
-def cargar_config(ruta_yaml: Path) -> ConfigCorrector:
-    with open(ruta_yaml, "r", encoding="utf-8") as archivo:
-        config = yaml.safe_load(archivo) or {}
-
-    return ConfigCorrector(
-        reglas_activas=config.get("reglas_activas", []),
-    )
+DEFAULT_CONFIG = Path("config.yaml")
 
 
 def main(args: argparse.Namespace):
@@ -49,6 +39,9 @@ def flujo_completo(ruta_audio: Path, adaptador_amt_nombre: str):
 
     logger.info("[PIPELINE] Iniciando canalización para el archivo %s", ruta_audio)
 
+    config = cargar_config_yaml(DEFAULT_CONFIG, root_dir=Path("."))
+    ejecucion = EjecucionExperimental(config=config)
+
     # Etapa 1: Carga y validación del archivo de audio
     try:
         cargar_audio(Path(ruta_audio))
@@ -59,20 +52,16 @@ def flujo_completo(ruta_audio: Path, adaptador_amt_nombre: str):
     # Etapa 2: Transcripción del audio con herramienta externa
     try:
         ts_inicial_ruta, adaptador_ts = transcribir_audio(
-            Path(ruta_audio), adaptador_amt_nombre
+            Path(ruta_audio), adaptador_amt_nombre, config
         )
     except FileNotFoundError as e:
         logger.critical("[PIPELINE] %s", e)
         sys.exit(1)  # Salida controlada, no se puede continuar con la canalización
 
     # Etapa 3: Conversión a formato interno
-    ts_normalizada = convertir_formato(ts_inicial_ruta, adaptador_ts)
+    ts_normalizada = convertir_formato(ts_inicial_ruta, adaptador_ts, config)
 
     # Etapa 4: Corrección de la transcripción inicial
-
-    config = cargar_config(Path(DEFAULT_CONFIG))
-    ejecucion = EjecucionExperimental(config=config)
-
     ts_corregida = corregir_transcripción(
         ts_normalizada, config
     )  # TODO: retornar ediciones y guardar en "ejecución"

@@ -61,6 +61,7 @@ class Transcripción:
     def tiene_solapamientos(self) -> bool:
         """Comprueba si hay notas solapadas temporalmente."""
         for i in range(len(self.notas) - 1):
+            # asume eventos ordenados
             if self.notas[i].offset > self.notas[i + 1].onset:
                 return True
         return False
