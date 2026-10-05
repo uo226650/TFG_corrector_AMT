@@ -51,14 +51,15 @@ def convertir_formato(
     ts_normalizada = Transcripción(notas=notas_ordenadas, ruta_origen=ts_inicial_ruta)
 
     # Directorio para guardar la salida
-    ts_dirname = f"data/ts_normalizada/{adaptador.nombre}"
+    ts_dirname = config.ruta_ts_normalizada / adaptador.nombre
     os.makedirs(ts_dirname, exist_ok=True)
-    ts_normalizada_ruta = f"{ts_dirname}/{ts_inicial_ruta.name}"
+    ts_normalizada_ruta = ts_dirname / ts_inicial_ruta.name
 
     # Exporta a csv
     try:
         columnas = ts_normalizada.exportar_a_csv(ts_normalizada_ruta)
     except TranscripcionVacíaError:
+        columnas = [f.name for f in fields(Nota)]
         logger.warning(
             "[CONVERSOR] Exportando transcripción vacía: %s", ts_normalizada_ruta
         )

@@ -187,11 +187,11 @@ def transcribir_audio(ruta_archivo: Path, adaptador: str, config: GlobalConfig):
         )
 
     # Directorio para guardar la salida
-    ts_dirname = f"data/ts_inicial/{adaptador_amt.nombre}"
+    ts_dirname = config.ruta_ts_inicial / adaptador_amt.nombre
     os.makedirs(ts_dirname, exist_ok=True)
 
     try:
-        ts_inicial_ruta = adaptador_amt.transcribir(ruta_archivo, Path(ts_dirname))
+        ts_inicial_ruta = adaptador_amt.transcribir(ruta_archivo, ts_dirname)
         return ts_inicial_ruta, adaptador_amt
     except FileNotFoundError as e:
         logger.critical("[ADAPTADOR_AMT] %s.", e)

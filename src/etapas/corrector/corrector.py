@@ -11,7 +11,6 @@ import os
 
 from src.config import GlobalConfig
 from src.dominio.transcripción import Transcripción
-from src.etapas.corrector.configuracion_correccion import ConfigCorrector
 from src.etapas.corrector.reglas_correccion import (
     ReglaEliminaciónSolapamientos,
     ReglaFusiónNotasCortas,
@@ -49,9 +48,9 @@ def corregir_transcripción(
         ts_actual = regla.aplicar(ts_actual)
         logger.info("[CORRECTOR] Regla '%s' aplicada", nombre_regla)
         # Directorio para guardar la salida
-        ts_dirname = f"data/ts_corregida/{nombre_regla}"
+        ts_dirname = config.ruta_ts_corregida / nombre_regla
         os.makedirs(ts_dirname, exist_ok=True)
-        ts_regla_ruta = f"{ts_dirname}/{ts_actual.ruta_origen.name}"
+        ts_regla_ruta = ts_dirname / ts_actual.ruta_origen.name
         # Exportar transcripción intermedia
         ts_actual.exportar_a_csv(ts_regla_ruta)
 
