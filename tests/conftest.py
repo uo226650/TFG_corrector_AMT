@@ -174,8 +174,8 @@ def notas_escala():
         Nota(64, 1.0, 1.5, "BasicPitch", 0.92),
         Nota(65, 1.5, 2.0, "BasicPitch", 0.87),
         Nota(67, 2.0, 2.5, "BasicPitch", 0.91),
-        Nota(69, 1.0, 1.5, "BasicPitch", 0.92),
-        Nota(71, 1.5, 2.0, "BasicPitch", 0.87),
+        Nota(69, 2.5, 3.0, "BasicPitch", 0.92),
+        Nota(71, 3.5, 4.0, "BasicPitch", 0.87),
     ]
 
 
