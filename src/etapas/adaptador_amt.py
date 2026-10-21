@@ -99,7 +99,6 @@ class AdaptadorBasicPitch:
             notas = []
             reiniciar_contador_nota()
             reader = csv.DictReader(ts_inicial)
-            next(reader)
             for num, row in enumerate(reader, start=2):
                 try:
                     start_time = float(row["start_time_s"])
