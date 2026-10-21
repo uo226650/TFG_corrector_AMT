@@ -25,6 +25,7 @@ def convertir_formato(
         - Ordena eventos por onset, si dos eventos tienen el mismo onset ordena por pitch
         - Reasigna identificadores secuenciales
         - Exporta artefacto intermedio a csv para permitir el análisis y revisión manual
+
     Args:
         ts_inicial: ruta de la transcripción (csv) bruta a procesar
         adaptador: Nombre de la herramienta AMT que proporciona ts_inicial

@@ -3,6 +3,7 @@ Tests para el Adaptador AMT (etapa 2).
 Casos: TODO: identificador de los casos de prueba del documento TFG.
 """
 
+import csv
 from unittest.mock import patch
 
 import pytest
@@ -184,3 +185,88 @@ class TestTranscribirAudio:
         assert "CRITICAL" in caplog.text
         assert "no generó" in caplog.text
         assert caplog.records[0].name == "src.etapas.adaptador_amt"
+
+
+class TestCSVaNotas:
+    """Conversión de archivos CSV a objetos Nota."""
+
+    def test_csv_a_notas_mapea_todas_las_filas(self, tmp_path):
+        """TODO: identificador del caso de prueba:
+        Una transcripción inicial válida mapea cada fila de datos a un objeto Nota del dominio."""
+
+        ruta_csv = tmp_path / "transcripcion.csv"
+
+        cabecera = ["start_time_s", "end_time_s", "pitch_midi"]
+        eventos = [
+            ["0.0", "1.0", "60"],
+            ["0.5", "1.5", "62"],
+            ["1.0", "2.0", "64"],
+        ]
+
+        with open(ruta_csv, mode="w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(cabecera)
+            writer.writerows(eventos)
+
+        adaptador = AdaptadorBasicPitch()
+
+        notas = adaptador.csv_a_notas(ruta_csv)
+
+        assert len(notas) == 3  # BUG CORREGIDO
+
+        # Valida primera nota
+        primera_nota = notas[0]
+        assert primera_nota.pitch == 60
+        assert primera_nota.onset == pytest.approx(0.0)
+        assert primera_nota.offset == pytest.approx(1.0)
+        assert primera_nota.fuente == "basic_pitch"
+
+        # Valida segunda nota
+        primera_nota = notas[1]
+        assert primera_nota.pitch == 62
+        assert primera_nota.onset == pytest.approx(0.5)
+        assert primera_nota.offset == pytest.approx(1.5)
+        assert primera_nota.fuente == "basic_pitch"
+
+        # Valida tercera nota
+        primera_nota = notas[2]
+        assert primera_nota.pitch == 64
+        assert primera_nota.onset == pytest.approx(1.0)
+        assert primera_nota.offset == pytest.approx(2.0)
+        assert primera_nota.fuente == "basic_pitch"
+
+    def test_csv_a_notas_descarta_fila_invalida(self, tmp_path, caplog):
+        """TODO: identificador del caso de prueba:
+        Si la transcripción inicial contiene filas inválidas
+        se descarta esa fila y se loguea un warning."""
+
+        ruta_csv = tmp_path / "transcripcion_con_errores.csv"
+
+        cabecera = ["start_time_s", "end_time_s", "pitch_midi"]
+        eventos = [
+            ["0.0", "1.0", "60"],  # Nota válida
+            [
+                "0.5",
+                "1.5",
+                "invalido",
+            ],  # ValueError en el pitch
+            ["1.0", "2.0", "64"],  # Nota válida
+        ]
+
+        with open(ruta_csv, mode="w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(cabecera)
+            writer.writerows(eventos)
+
+        adaptador = AdaptadorBasicPitch()
+
+        with caplog.at_level("WARNING"):
+            notas = adaptador.csv_a_notas(ruta_csv)
+
+        # Se procesan 2 de las 3 notas del csv
+        assert len(notas) == 2
+        assert notas[0].pitch == 60
+        assert notas[1].pitch == 64
+
+        assert "Descartada Fila[3]" in caplog.text
+        assert caplog.records[0].levelname == "WARNING"
