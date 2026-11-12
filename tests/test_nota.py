@@ -73,6 +73,20 @@ class TestNota:
             Nota(128, 0.0, 0.5)
         assert "fuera de rango MIDI" in str(exc_info.value)
 
+    def test_nota_onset_negativo_lanza_excepción(self):
+        """TODO: identificador del caso de prueba:
+        Onset -1.0 no es válido."""
+        with pytest.raises(NotaValidationError) as exc_info:
+            Nota(128, -1.0, 0.5)
+        assert "debe ser >= 0" in str(exc_info.value)
+
+    def test_nota_offset_negativo_lanza_excepción(self):
+        """TODO: identificador del caso de prueba:
+        Offset -1.0 no es válido."""
+        with pytest.raises(NotaValidationError) as exc_info:
+            Nota(128, 0, -1.0)
+        assert "debe ser > 0" in str(exc_info.value)
+
     def test_nota_pitch_negativo_lanza_excepción(self):
         """TODO: identificador del caso de prueba:
         Pitch -1 (negativo) no es válido."""
@@ -99,3 +113,10 @@ class TestNota:
         Confianza 1.0 es válida (certeza total)."""
         nota = Nota(60, 0.0, 0.5, confianza=1.0)
         assert nota.confianza == 1.0
+
+    def test_nota_confianza_fuera_de_rango_lanza_excepción(self):
+        """TODO: identificador del caso de prueba:
+        Confianza 2.0 no es válido."""
+        with pytest.raises(NotaValidationError) as exc_info:
+            Nota(60, 0.0, 0.5, confianza=2.0)
+        assert "fuera de rango [0, 1]" in str(exc_info.value)

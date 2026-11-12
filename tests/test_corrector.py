@@ -54,7 +54,12 @@ class TestEliminaciónSolapamientos(BaseReglas):
         """TODO: identificador del caso de prueba:
         Dos notas se solapan originalmente. Tras aplicar la regla de corrección de solapamientos
         la primera nota se recorta para igualar su offset al instante de inicio de la segunda."""
-        notas = [Nota(64, onset=0.0, offset=1.5), Nota(64, onset=1.0, offset=2.0)]
+        notas = [
+            Nota(64, onset=0.0, offset=1.5),
+            Nota(64, onset=1.0, offset=2.0),
+            Nota(60, onset=2.5, offset=3.0),
+            Nota(62, onset=3.5, offset=4.0),
+        ]
         original, corregida = self._crea_transcripción_y_aplica_regla(
             notas, regla_eliminación_solapamientos
         )
