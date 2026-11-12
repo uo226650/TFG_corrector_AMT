@@ -22,16 +22,17 @@ def convertir_formato(
 ) -> Transcripción:
     """
     Normaliza una transcripción bruta al formato interno:
-        - Ordena eventos por onset, si dos eventos tienen el mismo onset ordena por pitch
-        - Reasigna identificadores secuenciales
-        - Exporta artefacto intermedio a csv para permitir el análisis y revisión manual
+        - Ordena eventos por onset, si dos eventos tienen el mismo onset ordena por pitch.
+        - Reasigna identificadores secuenciales.
+        - Exporta artefacto intermedio a csv para permitir el análisis y revisión manual.
 
     Args:
-        ts_inicial: ruta de la transcripción (csv) bruta a procesar
-        adaptador: Nombre de la herramienta AMT que proporciona ts_inicial
+        ts_inicial: ruta de la transcripción (csv) bruta a procesar.
+        adaptador: Nombre de la herramienta AMT que proporciona ts_inicial.
+        config: configuración del sistema para esta ejecución.
 
     Returns:
-        ts_normalizada: Transcripción normalizada al formato interno
+        ts_normalizada: Transcripción normalizada al formato interno.
     """
 
     logger.info("[CONVERSOR] Conviertiendo tabla %s a formato interno", ts_inicial_ruta)

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class AdaptadorNoEncontradoError(Exception):
-    """Se lanza cuando el nombre del adaptador no está registrado"""
+    """Se lanza cuando el nombre del adaptador no está registrado."""
 
 
 class AdaptadorAMT(Protocol):
@@ -167,6 +167,7 @@ def transcribir_audio(ruta_archivo: Path, adaptador: str, config: GlobalConfig):
     Args:
         ruta: Ruta al archivo de audio.
         adaptador: Nombre de la herramienta AMT a utilizar.
+        config: configuración del sistema para esta ejecución.
 
     Returns:
         ts_inicial: Transcripción automática inicial cruda.
