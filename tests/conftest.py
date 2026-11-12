@@ -11,7 +11,10 @@ import soundfile as sf
 
 from src.dominio.nota import Nota
 from src.dominio.transcripción import Transcripción
-from src.etapas.corrector.corrector import ReglaEliminaciónSolapamientos
+from src.etapas.corrector.corrector import (
+    ReglaEliminaciónSolapamientos,
+    ReglaFusiónPorProximidad,
+)
 from src.etapas.gestor_entrada.validadores_entrada import (
     FORMATOS_SOPORTADOS,
     MAX_DURACION,
@@ -190,4 +193,9 @@ def transcripción_escala_válida(notas_escala):
 
 @pytest.fixture(scope="session")
 def regla_eliminación_solapamientos():
-    return ReglaEliminaciónSolapamientos()
+    return ReglaEliminaciónSolapamientos({})
+
+
+@pytest.fixture(scope="session")
+def regla_fusión_proximidad():
+    return ReglaFusiónPorProximidad({})
