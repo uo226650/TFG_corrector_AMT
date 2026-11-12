@@ -12,7 +12,6 @@ from src.etapas.adaptador_amt import (
     transcribir_audio,
 )
 from src.etapas.conversor_simbólico import convertir_formato
-from src.etapas.corrector.configuracion_correccion import ConfigCorrector
 from src.etapas.corrector.corrector import corregir_transcripción
 from src.etapas.evaluador import evaluar_transcripciones
 from src.etapas.generador_informes import generar_informe

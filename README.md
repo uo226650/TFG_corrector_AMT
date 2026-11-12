@@ -65,3 +65,27 @@ Ejemplo:
 ```bash
 uv run pytest tests/test_gestor_entrada.py
 ```
+
+### Configuración del Sistema (`config.yaml`)
+
+El comportamiento de la canalización y sus diferentes etapas de procesamiento se controlan mediante un archivo de configuración en formato YAML (`config.yaml`).
+
+Ejemplo:
+
+```yaml
+# Rutas donde el sistema almacenará los resultados
+pipeline:
+  dir_audios: "data/audio"
+  dir_ts_inicial: "data/ts_inicial"
+  dir_ts_normalizada: "data/ts_normalizada"
+  dir_ts_corregida: "data/ts_corregida"
+
+# Configuración específica para el módulo corrector
+corrector:
+  reglas_activas:
+    - "eliminación_solapamientos"
+    - "fusión_notas_cortas"
+  
+  umbrales:
+    fusión_notas_cortas:
+      max_gap: 0.04

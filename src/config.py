@@ -48,14 +48,17 @@ def cargar_config_yaml(ruta_yaml: Path, root_dir: Path) -> GlobalConfig:
             datos_config = yaml.safe_load(archivo) or {}
 
         # Sección global
-        datos_pipeline = datos_config.get("pipeline", {})
-        kwargs_pipeline = {k: v for k, v in datos_pipeline.items() if v is not None}
-        kwargs.update(kwargs_pipeline)
+        datos_pipeline = datos_config.get("pipeline") or {}
+        if isinstance(datos_pipeline, dict):  # valida entrada
+            kwargs_pipeline = {k: v for k, v in datos_pipeline.items() if v is not None}
+            kwargs.update(kwargs_pipeline)
 
         # Sección módulo corrector
-        datos_corrector = datos_config.get("corrector", {})
-        kwargs["corrector"] = ConfigCorrector(
-            reglas_activas=datos_corrector.get("reglas_activas") or list()
-        )
+        datos_corrector = datos_config.get("corrector") or {}
+        if isinstance(datos_corrector, dict):  # valida entrada
+            kwargs["corrector"] = ConfigCorrector(
+                reglas_activas=datos_corrector.get("reglas_activas") or list(),
+                umbrales=datos_corrector.get("umbrales") or list(),
+            )
 
     return GlobalConfig(**kwargs)
