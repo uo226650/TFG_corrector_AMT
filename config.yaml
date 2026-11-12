@@ -10,7 +10,7 @@ pipeline:
 corrector:
   reglas_activas:
     - "eliminación_solapamientos"
-    - "fusión_notas_cortas"
+    - "fusión_proximidad"
   umbrales:
-    fusión_notas_cortas: 
+    fusión_proximidad: 
       max_gap: 0.08
